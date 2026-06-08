@@ -1,0 +1,2636 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Landing Page 產生器｜CMoney</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --primary: #2e5283;
+      --primary-dark: #1f3b63;
+      --accent: #9b8400;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --border: #e0e4ea;
+      --text: #1a1f2b;
+      --text-soft: #5a636f;
+      --panel-width: 480px;
+      --panel-collapsed-width: 68px;
+      --success: #16a34a;
+      --radius: 10px;
+    }
+
+    body {
+      margin: 0; padding: 0;
+      font-family: "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: var(--primary);
+      color: #fff;
+      height: 56px;
+      display: grid;
+      grid-template-columns: var(--panel-width) 1fr;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      transition: grid-template-columns 0.25s ease;
+    }
+    .topbar-left {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px 0 24px;
+      border-right: 1px solid rgba(255,255,255,0.15);
+      min-width: 0;
+    }
+    .topbar-right {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      background: #2d3240;
+    }
+    .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-preview-label { font-size: 13px; font-weight: 600; color: #c8cdd8; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .preview-tools { display: flex; align-items: center; gap: 8px; }
+
+    .collapse-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #dbe3f0;
+      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+    .collapse-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; border: none; transition: all 0.2s ease;
+      white-space: nowrap; text-decoration: none;
+    }
+    .btn--primary { background: #fff; color: var(--primary); }
+    .btn--primary:hover { background: #e8eef8; }
+    .btn--accent { background: var(--accent); color: #fff; }
+    .btn--accent:hover { background: #7a6800; }
+    .btn--ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.5); }
+    .btn--ghost:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--panel-width) 1fr;
+      min-height: calc(100vh - 56px);
+      transition: grid-template-columns 0.25s ease;
+    }
+
+    body.app-collapsed .topbar {
+      grid-template-columns: var(--panel-collapsed-width) 1fr;
+    }
+    body.app-collapsed .topbar-left {
+      padding: 0;
+      justify-content: center;
+    }
+    body.app-collapsed .topbar-title {
+      display: none;
+    }
+    body.app-collapsed .layout {
+      grid-template-columns: var(--panel-collapsed-width) 1fr;
+    }
+    body.app-collapsed .form-panel {
+      width: var(--panel-collapsed-width);
+      min-width: var(--panel-collapsed-width);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+    body.app-collapsed .form-panel > :not(.collapsed-rail) {
+      display: none !important;
+    }
+    .collapsed-rail {
+      display: none;
+    }
+    body.app-collapsed .collapsed-rail {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 12px;
+      gap: 10px;
+      background: #0f1117;
+    }
+    .collapsed-rail-toggle {
+      display: none;
+    }
+
+    /* ── Form Panel ── */
+    .form-panel {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      height: calc(100vh - 56px);
+      position: sticky;
+      top: 56px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .form-inner { padding: 24px; display: flex; flex-direction: column; gap: 0; }
+
+    /* Section accordion */
+    .section-block { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+    .section-toggle {
+      width: 100%; background: none; border: none; padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700;
+      color: var(--text); background: #f8f9fb; transition: background 0.15s;
+    }
+    .section-toggle:hover { background: #eef1f7; }
+    .section-toggle .icon { width: 18px; height: 18px; transition: transform 0.25s; color: var(--text-soft); flex-shrink: 0; }
+    .section-toggle[aria-expanded="true"] .icon { transform: rotate(180deg); }
+    .section-toggle .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%; background: var(--primary);
+      color: #fff; font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0;
+    }
+    .section-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .section-body.hidden { display: none; }
+
+    /* Form fields */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+    .field input, .field textarea, .field select {
+      font-family: inherit; font-size: 13px; color: var(--text);
+      background: #fff; border: 1.5px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; outline: none; transition: border-color 0.2s;
+      width: 100%;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); }
+    .field textarea { resize: vertical; min-height: 72px; }
+    .field .hint { font-size: 11px; color: var(--text-lighter); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Feature item */
+    .feat-item { border: 1.5px solid var(--border); border-radius: 8px; padding: 14px; background: #fafbfc; position: relative; margin-top: 10px; }
+    .feat-item:first-child { margin-top: 0; }
+    .feat-item__header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .feat-item__num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: transparent; border: 2px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+    /* ── Upload components ── */
+    .upload-area { border: 2px dashed var(--border); border-radius: 8px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 56px; transition: border-color 0.2s, background 0.2s; }
+    .upload-area:hover { border-color: var(--primary); background: #f5f7fb; }
+    .upload-area.has-file { border-style: solid; border-color: var(--primary); background: #f0f4fb; }
+    .upload-area img.up-thumb { width: 44px; height: 44px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+    .upload-area .up-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .upload-area .up-name { font-size: 12px; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+    .upload-area .up-hint { font-size: 11px; color: var(--text-lighter); }
+    .upload-area .up-icon { font-size: 20px; flex-shrink: 0; }
+    .upload-clear { font-size: 11px; color: var(--text-lighter); background: none; border: none; cursor: pointer; padding: 0; margin-left: auto; flex-shrink: 0; }
+    .upload-clear:hover { color: #dc2626; }
+    .upload-shared-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fafbfc; }
+    .upload-shared-row img { height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+    .upload-shared-row .shared-label { font-size: 12px; color: var(--text-soft); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upload-shared-row .shared-custom-btn { font-size: 11px; font-weight: 600; color: var(--primary); background: #e8eef8; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
+    .upload-shared-row .shared-custom-btn:hover { background: #d0daf5; }
+    .feat-item__title-text { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+    .feat-item__fields { display: flex; flex-direction: column; gap: 10px; }
+    .btn--remove { background: none; border: none; cursor: pointer; color: var(--text-lighter); padding: 2px; border-radius: 4px; display: flex; align-items: center; }
+    .btn--remove:hover { color: #dc2626; background: #fee2e2; }
+    .btn--move { background: none; border: none; cursor: pointer; color: var(--text-lighter); padding: 2px; border-radius: 4px; display: flex; align-items: center; }
+    .btn--move:hover { color: var(--primary); background: #e8eef8; }
+
+    /* preset color swatches */
+    .preset-swatch { border: 2px solid transparent; border-radius: 10px; padding: 6px; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
+    .preset-swatch:hover { transform: translateY(-1px); border-color: var(--primary); }
+    .preset-swatch.active { border-color: var(--primary); }
+    .preset-swatch__bar { display: flex; border-radius: 6px; overflow: hidden; height: 28px; }
+    .preset-swatch__seg { flex: 1; }
+    .preset-swatch__name { font-size: 10px; color: var(--text-soft); text-align: center; margin-top: 4px; line-height: 1.3; }
+
+    .add-feat-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border: 1.5px dashed var(--border); border-radius: 8px; background: none; cursor: pointer; font-size: 13px; color: var(--text-soft); font-family: inherit; transition: all 0.2s; }
+    .add-feat-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4fb; }
+
+    /* Highlight item */
+    .hl-item { border: 1.5px solid var(--border); border-radius: 8px; padding: 14px; background: #fafbfc; position: relative; margin-top: 10px; }
+    .hl-item:first-child { margin-top: 0; }
+    .hl-item__header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .hl-item__num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: transparent; border: 2px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .hl-item__title-text { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+    /* Emoji picker */
+    .emoji-picker-wrap { position: relative; }
+    .emoji-trigger { display: flex; align-items: center; gap: 6px; width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; background: #f8f9fb; cursor: pointer; font-size: 13px; transition: border-color 0.2s; }
+    .emoji-trigger:hover { border-color: var(--primary); }
+    .emoji-trigger .emoji-preview { font-size: 20px; line-height: 1; }
+    .emoji-trigger .emoji-label { color: var(--text-soft); font-size: 12px; }
+    .emoji-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 200; background: #fff; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); width: 240px; }
+    .emoji-dropdown.open { display: block; }
+    .emoji-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px; }
+    .emoji-opt { font-size: 20px; line-height: 1; padding: 4px; border-radius: 6px; cursor: pointer; text-align: center; transition: background 0.15s; border: none; background: none; }
+    .emoji-opt:hover { background: #f0f4fb; }
+    .emoji-custom-row { display: flex; gap: 6px; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; }
+    .emoji-custom-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 14px; outline: none; }
+    .emoji-custom-row input:focus { border-color: var(--primary); }
+    .emoji-custom-row button { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+
+    /* ── Preview Panel ── */
+    .preview-panel {
+      display: flex; flex-direction: column;
+      background: #e8eaef;
+    }
+    .preview-iframe-wrap { flex: 1; overflow: hidden; position: relative; display: flex; justify-content: center; align-items: flex-start; background: #e8eaef; }
+    .preview-iframe-wrap iframe { border: none; transition: width 0.3s ease, box-shadow 0.3s ease; }
+    .preview-iframe-wrap.mode-desktop iframe { width: 100%; height: 100%; box-shadow: none; }
+    .preview-iframe-wrap.mode-mobile { padding: 16px; overflow: hidden; justify-content: center; }
+    .preview-iframe-wrap.mode-mobile iframe { width: 375px; flex-shrink: 0; height: 100%; max-height: calc(100% - 32px); box-shadow: 0 8px 32px rgba(0,0,0,0.25); border-radius: 12px; }
+    /* toolbar device toggle */
+    .preview-device-btns { display: flex; gap: 4px; margin-left: 8px; }
+    .preview-device-btns button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #9aa2ae; border-radius: 6px; padding: 0 12px; height: 38px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; transition: background 0.15s, color 0.15s; }
+    .preview-device-btns button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .preview-device-btns button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .topbar-import-btn {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: #dbe3f0; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap; font-family: inherit;
+      height: 38px; display: inline-flex; align-items: center;
+    }
+    .topbar-import-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+    .topbar-demo-btn {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: #dbe3f0; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap; font-family: inherit;
+      height: 38px;
+    }
+    .topbar-demo-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+    .topbar-btns { display: flex; gap: 4px; align-items: center; }
+    body.app-collapsed .topbar-import-btn,
+    body.app-collapsed .topbar-demo-btn { display: none !important; }
+    .topbar-clear-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+      color: #9aa2ae; border-radius: 6px; padding: 5px 11px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: inherit;
+    }
+    .topbar-clear-btn:hover { background: rgba(220,38,38,0.15); color: #f87171; border-color: rgba(220,38,38,0.3); }
+
+    .preview-placeholder {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; color: var(--text-lighter);
+    }
+    .preview-placeholder svg { opacity: 0.3; }
+    .preview-placeholder p { font-size: 15px; font-weight: 500; margin: 0; }
+    .preview-placeholder .sub { font-size: 13px; opacity: 0.7; margin: 0; }
+
+    /* ── Preview panel RWD：視窗不夠寬時隱藏預覽區 ── */
+    @media (max-width: 959px) {
+      .layout { grid-template-columns: var(--panel-width); }
+      .preview-panel { display: none; }
+    }
+
+    /* ── Bottom Action bar (inside form-panel) ── */
+    .form-tabs { display: flex; border-bottom: 2px solid var(--border); background: var(--card); flex-shrink: 0; }
+    .form-tab { flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 600; color: var(--text-soft); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; font-family: inherit; }
+    .form-tab:hover { color: var(--primary); }
+    .form-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .form-tab-content { display: none; flex: 1; overflow-y: auto; }
+    .form-tab-content.active { display: flex; flex-direction: column; }
+    .action-bar {
+      position: sticky; bottom: 0; left: 0; right: 0;
+      background: var(--card); border-top: 1px solid var(--border);
+      padding: 14px 24px; display: flex; gap: 10px;
+    }
+    .action-bar .btn { flex: 1; padding: 12px; font-size: 14px; border-radius: 8px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--success); color: #fff; padding: 10px 20px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease; pointer-events: none; z-index: 9999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title">🛠 Landing Page 產生器</span>
+    <div class="topbar-btns">
+      <label class="topbar-import-btn" title="匯入打包的壓縮資料夾(.zip)進行編輯" style="cursor:pointer;display:inline-flex;align-items:center;">
+        匯入
+        <input type="file" accept=".zip" style="display:none" onchange="importZIP(this)">
+      </label>
+      <button class="topbar-demo-btn" onclick="loadDefaultShowcase()" title="載入籌K設定值參考">範例</button>
+      <button id="btn-toggle-panel" class="collapse-btn" onclick="toggleFormPanel()" title="收起側欄，預覽完整的桌機版畫面" aria-label="收起側欄">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l-5 5 5 5"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-preview-label">預覽畫面</span>
+    <div class="preview-tools">
+      <div class="preview-device-btns">
+        <button id="btn-desktop" class="active" onclick="setPreviewMode('desktop')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          桌機
+        </button>
+        <button id="btn-mobile" onclick="setPreviewMode('mobile')">
+          <svg width="12" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
+          手機
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── Form Panel ── -->
+  <div class="form-panel">
+    <div class="collapsed-rail">
+      <p style="font-size:13px;color:#6b7280;text-align:center;padding:0 4px;line-height:1.5;margin:0;writing-mode:vertical-rl;">設定工具隱藏中，確認網頁完成即可下載完整檔案</p>
+    </div>
+    <!-- Tab 列 -->
+    <div class="form-tabs">
+      <button class="form-tab active" onclick="switchTab('content',this)">內容</button>
+      <button class="form-tab" onclick="switchTab('color',this)">顏色</button>
+      <button class="form-tab" onclick="switchTab('seo',this)">SEO</button>
+    </div>
+
+    <!-- 內容分頁 (1-7) -->
+    <div class="form-tab-content active" id="tab-content">
+      <div class="form-inner">
+
+      <!-- 1. 基本設定 -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">1</span>Header</span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>產品名稱</label>
+            <input type="text" id="f-product-name" placeholder="例：主動式ETF" value="" />
+          </div>
+          <div class="field">
+            <label>副標文字</label>
+            <input type="text" id="f-brand-subtitle" placeholder="例：讓頂尖經理人幫你挑出潛力股" value="" />
+          </div>
+          <div class="field">
+            <label>App Icon 圖片</label>
+            <div class="upload-area" id="ua-f-app-icon" onclick="triggerUpload('f-app-icon')">
+              <img class="up-thumb" id="upreview-f-app-icon" src="" style="display:none">
+              <span class="up-icon" id="uicon-f-app-icon">📁</span>
+              <div class="up-info">
+                <span class="up-name" id="uphint-f-app-icon">點擊上傳圖片</span>
+                <span class="up-hint">PNG / JPG / WebP</span>
+              </div>
+              <button type="button" class="upload-clear" id="uclear-f-app-icon" style="display:none" onclick="event.stopPropagation();clearUpload('f-app-icon','')">&#10005;</button>
+            </div>
+            <input type="file" id="ufile-f-app-icon" accept="image/*" style="display:none" onchange="handleUpload('f-app-icon',this)">
+            <input type="hidden" id="f-app-icon" value="">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Hero 區塊 -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">2</span>Hero 主視覺</span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>Hero 主標題</label>
+            <input type="text" id="f-hero-title" placeholder="留空則自動帶入「產品名稱」" />
+          </div>
+          <div class="field">
+            <label>Hero 介紹文字</label>
+            <textarea id="f-hero-intro" placeholder="簡要介紹產品特色與使用價值&#10;例：&#10;全台首款量身打造的監測工具！&#10;每日揭露經理人最新持股動向與資金配置方向，帶你提前掌握布局脈絡，降低資訊落差與高檔追價風險。"></textarea>
+          </div>
+          <div class="field">
+            <label>Hero 圖片</label>
+            <div class="upload-area" id="ua-f-hero-img" onclick="triggerUpload('f-hero-img')">
+              <img class="up-thumb" id="upreview-f-hero-img" src="" style="display:none">
+              <span class="up-icon" id="uicon-f-hero-img">📁</span>
+              <div class="up-info">
+                <span class="up-name" id="uphint-f-hero-img">點擊上傳圖片</span>
+                <span class="up-hint">建議寬 560px 以上</span>
+              </div>
+              <button type="button" class="upload-clear" id="uclear-f-hero-img" style="display:none" onclick="event.stopPropagation();clearUpload('f-hero-img','')">&#10005;</button>
+            </div>
+            <input type="file" id="ufile-f-hero-img" accept="image/*" style="display:none" onchange="handleUpload('f-hero-img',this)">
+            <input type="hidden" id="f-hero-img" value="">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Highlights -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">3</span>Why 選擇我們 <span style="font-size:11px;font-weight:400;color:#9aa2ae;margin-left:6px;">(1-2 個亮點)</span></span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>標題</label>
+            <input type="text" id="f-hl-title" placeholder="留空則自動帶入「Why [產品名稱] ?」" />
+          </div>
+          <div id="highlights-list"></div>
+          <button class="add-feat-btn" onclick="addHighlight()" id="add-hl-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            新增亮點
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. Features -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">4</span>核心功能 <span style="font-size:11px;font-weight:400;color:#9aa2ae;margin-left:6px;">(1-6 個功能)</span></span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>區塊標題</label>
+            <input type="text" id="f-feat-title" value="" placeholder="建議14字元內。例：六大核心功能，輕鬆掌握潛力股" />
+          </div>
+          <div id="features-list">
+            <!-- 功能項目由 JS 動態產生 -->
+          </div>
+          <button class="add-feat-btn" onclick="addFeature()" id="add-feat-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            新增功能項目
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Download CTA -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">5</span>下載 CTA</span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>小標</label>
+            <input type="text" id="f-cta-eyebrow" value="" placeholder="例：⚡ 現在就加入 ⚡" />
+          </div>
+          <div class="field">
+            <label>主標題</label>
+            <input type="text" id="f-cta-h2" placeholder="留空則自動帶入「立即下載[產品名稱] 掌握先機」" />
+          </div>
+          <div class="field">
+            <label>副標文字</label>
+            <textarea id="f-cta-sub" placeholder="簡要補充描述，也可留白不放"></textarea>
+          </div>
+          <div class="field">
+            <label>下載連結 (URL)</label>
+            <input type="url" id="f-cta-url" placeholder="貼上公司後台71.onelink產出的連結" value="" />
+          </div>
+          <div class="field">
+            <label>App Store 徽章圖片</label>
+            <div class="upload-shared-row" id="ua-f-ios-badge">
+              <img id="upreview-f-ios-badge" src="assets/images/SharedImages/appstore-badge@2x.png">
+              <span class="shared-label" id="uphint-f-ios-badge">使用預設</span>
+              <button type="button" class="shared-custom-btn" onclick="triggerUpload('f-ios-badge')">&#8593; 自訂上傳</button>
+              <button type="button" class="upload-clear" id="uclear-f-ios-badge" style="display:none" onclick="clearUpload('f-ios-badge','assets/images/SharedImages/appstore-badge@2x.png')">&#10005; 還原</button>
+            </div>
+            <input type="file" id="ufile-f-ios-badge" accept="image/*" style="display:none" onchange="handleUpload('f-ios-badge',this)">
+            <input type="hidden" id="f-ios-badge" value="assets/images/SharedImages/appstore-badge@2x.png">
+          </div>
+          <div class="field">
+            <label>Google Play 徽章圖片</label>
+            <div class="upload-shared-row" id="ua-f-android-badge">
+              <img id="upreview-f-android-badge" src="assets/images/SharedImages/play-badge@2x.png">
+              <span class="shared-label" id="uphint-f-android-badge">使用預設</span>
+              <button type="button" class="shared-custom-btn" onclick="triggerUpload('f-android-badge')">&#8593; 自訂上傳</button>
+              <button type="button" class="upload-clear" id="uclear-f-android-badge" style="display:none" onclick="clearUpload('f-android-badge','assets/images/SharedImages/play-badge@2x.png')">&#10005; 還原</button>
+            </div>
+            <input type="file" id="ufile-f-android-badge" accept="image/*" style="display:none" onchange="handleUpload('f-android-badge',this)">
+            <input type="hidden" id="f-android-badge" value="assets/images/SharedImages/play-badge@2x.png">
+          </div>
+          <div class="field">
+            <label>QR Code 圖片</label>
+            <div class="upload-area" id="ua-f-qrcode" style="cursor:default;">
+              <img class="up-thumb" id="upreview-f-qrcode" src="" style="display:none">
+              <div id="uicon-f-qrcode" style="width:44px;height:44px;border:2px dashed var(--border);border-radius:6px;flex-shrink:0;"></div>
+              <div class="up-info">
+                <span class="up-name" id="uphint-f-qrcode">尚無QR Code 圖片</span>
+                <span class="up-hint" id="uphint2-f-qrcode">上方輸入「App Icon」和「下載連結」後可點擊自動產生</span>
+                <span class="up-hint">桌機版會顯示QRcode，手機版自動隱藏</span>
+              </div>
+              <button type="button" class="upload-clear" id="uclear-f-qrcode" style="display:none" onclick="event.stopPropagation();clearUpload('f-qrcode','')">&#10005;</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button type="button" onclick="autoGenerateQR()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 12px;border:1.5px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                🤘 自動產生 QR Code
+              </button>
+              <div class="upload-shared-row" style="flex-shrink:0;padding:0;border:none;background:none;">
+                <button type="button" class="shared-custom-btn" onclick="document.getElementById('ufile-f-qrcode').click()" style="padding:8px 12px;">&#8593; 自訂上傳</button>
+                <input type="file" id="ufile-f-qrcode" accept="image/*" style="display:none" onchange="handleUpload('f-qrcode',this)">
+              </div>
+            </div>
+            <input type="hidden" id="f-qrcode" value="">
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Footer -->
+      <div class="section-block">
+        <button class="section-toggle" aria-expanded="true" onclick="toggleSection(this)">
+          <span style="display:flex;align-items:center;"><span class="badge">7</span>Footer</span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="field">
+            <label>公司名稱</label>
+            <input type="text" id="f-company" value="CMoney 全曜財經資訊股份有限公司" />
+          </div>
+          <div class="field">
+            <label>聯絡地址</label>
+            <input type="text" id="f-address" value="新北市板橋區文化路一段 268 號 12 樓之 2" />
+          </div>
+          <div class="field">
+            <label>版權年份</label>
+            <input type="text" id="f-year" value="2026" />
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-inner -->
+    </div><!-- /tab-content: 內容 -->
+
+    <!-- 顏色分頁 -->
+    <div class="form-tab-content" id="tab-color">
+      <div class="form-inner">
+        <div class="field-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>主色 (Primary)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="f-color-primary" value="#2e5283" style="width:40px;height:32px;padding:2px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;" oninput="syncColorFromPicker('primary',this.value)">
+              <input type="text" id="f-color-primary-hex" value="#2e5283" style="flex:1;font-family:monospace;font-size:12px;" oninput="syncColor('primary',this.value)" />
+            </div>
+            <span class="hint">Header、標題、按鈕</span>
+          </div>
+          <div class="field">
+            <label>輔色 (Secondary)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="f-color-accent" value="#9b8400" style="width:40px;height:32px;padding:2px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;" oninput="syncColorFromPicker('accent',this.value)">
+              <input type="text" id="f-color-accent-hex" value="#9b8400" style="flex:1;font-family:monospace;font-size:12px;" oninput="syncColor('accent',this.value)" />
+            </div>
+            <span class="hint">下載按鈕、CTA 強調元素</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-soft);margin:0;line-height:1.6;">ℹ️ 背景色無須手動設定，將自動搭配符合主題的淺色背景。</p>
+      </div>
+    </div><!-- /tab-color -->
+
+    <!-- SEO 分頁 -->
+    <div class="form-tab-content" id="tab-seo">
+      <div class="form-inner" style="gap:16px;">
+        <div class="field">
+          <label>頁面 &lt;title&gt;</label>
+          <input type="text" id="f-page-title" placeholder="例：產品名稱 | 副標Slogan" />
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <span id="seo-title-count" style="font-size:11px;color:var(--text-lighter);">0 字元（建議20字元內）</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Meta description</label>
+          <textarea id="f-meta-desc" placeholder="簡短描述此頁面內容，約 100-160 字元"></textarea>
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <span id="seo-desc-count" style="font-size:11px;color:var(--text-lighter);">0 字元（建議150字元內）</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-soft);margin:16px 0 0;line-height:1.6;">ℹ️ SEO 設定僅寫入網頁 <code style="background:#f0f4fb;border-radius:4px;padding:1px 5px;font-size:11px;">&lt;head&gt;</code>，<strong>不會顯示於頁面上</strong>。用於搜尋引擎排名（瀏覽器分頁標題、Google 搜尋結果摘要）。</p>
+      </div>
+    </div><!-- /tab-seo -->
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn" style="background:#f3f4f6;color:var(--text-soft);border:1.5px solid var(--border);" onclick="clearAllSettings()">
+        🗑 清空設定
+      </button>
+      <button class="btn btn--ghost" style="background:#f0f4fb;color:var(--primary);border:1.5px solid var(--border);" onclick="previewPage()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,8 3,14"/></svg>
+        預覽頁面
+      </button>
+      <button class="btn btn--accent" onclick="downloadZIP()">
+        ⬇ 下載打包
+      </button>
+    </div>
+  </div><!-- /form-panel -->
+
+  <!-- ── Preview Panel ── -->
+  <div class="preview-panel" id="preview-panel">
+    <div class="preview-placeholder" id="preview-placeholder">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="8" y="12" width="48" height="40" rx="4" stroke="#9aa2ae" stroke-width="2"/>
+        <path d="M8 20h48" stroke="#9aa2ae" stroke-width="2"/>
+        <circle cx="14" cy="16" r="2" fill="#9aa2ae"/>
+        <circle cx="20" cy="16" r="2" fill="#9aa2ae"/>
+        <circle cx="26" cy="16" r="2" fill="#9aa2ae"/>
+        <rect x="14" y="26" width="20" height="3" rx="1.5" fill="#c8cdd8"/>
+        <rect x="14" y="32" width="36" height="2" rx="1" fill="#dde1e8"/>
+        <rect x="14" y="37" width="28" height="2" rx="1" fill="#dde1e8"/>
+        <rect x="14" y="44" width="16" height="5" rx="2.5" fill="#c8cdd8"/>
+      </svg>
+      <p>點擊「預覽頁面」即時查看效果</p>
+      <p style="margin-top:2px;">收起側欄可檢視桌機版的完整畫面和互動</p>
+      <p class="sub" style="margin-top:10px;">確認網頁完成，點擊「下載打包」取得完整檔案</p>
+    </div>
+    <div class="preview-iframe-wrap mode-desktop" id="preview-iframe-wrap" style="display:none;">
+      <iframe id="preview-iframe" title="Landing Page 預覽"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Color helpers
+   ============================================================ */
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return { r, g, b };
+}
+function darken(hex, amt = 0.18) {
+  let { r, g, b } = hexToRgb(hex);
+  r = Math.max(0, Math.round(r * (1 - amt)));
+  g = Math.max(0, Math.round(g * (1 - amt)));
+  b = Math.max(0, Math.round(b * (1 - amt)));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+function hexToRgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function syncColor(key, val) {
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById(`f-color-${key}`)?.setAttribute('value', val);
+    document.getElementById(`f-color-${key}`).value = val;
+  }
+}
+function syncColorFromPicker(key, val) {
+  const hex = document.getElementById(`f-color-${key}-hex`);
+  if (hex) hex.value = val;
+}
+function mixWithWhite(hex, weight) {
+  const { r, g, b } = hexToRgb(hex);
+  const mr = Math.round(255 * (1 - weight) + r * weight);
+  const mg = Math.round(255 * (1 - weight) + g * weight);
+  const mb = Math.round(255 * (1 - weight) + b * weight);
+  return `#${mr.toString(16).padStart(2,'0')}${mg.toString(16).padStart(2,'0')}${mb.toString(16).padStart(2,'0')}`;
+}
+function blendColors(hex1, hex2, t) {
+  const a = hexToRgb(hex1), b2 = hexToRgb(hex2);
+  const r = Math.round(a.r * (1-t) + b2.r * t);
+  const g = Math.round(a.g * (1-t) + b2.g * t);
+  const b3 = Math.round(a.b * (1-t) + b2.b * t);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b3.toString(16).padStart(2,'0')}`;
+}
+function lighten(hex, amt = 0.28) {
+  const { r, g, b } = hexToRgb(hex);
+  const lr = Math.min(255, Math.round(r + (255 - r) * amt));
+  const lg = Math.min(255, Math.round(g + (255 - g) * amt));
+  const lb = Math.min(255, Math.round(b + (255 - b) * amt));
+  return `#${lr.toString(16).padStart(2,'0')}${lg.toString(16).padStart(2,'0')}${lb.toString(16).padStart(2,'0')}`;
+}
+function pickThemeColor(hexVal, pickerVal, fallback) {
+  const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
+  const h = (hexVal || '').trim();
+  const p = (pickerVal || '').trim();
+  const hOk = isHex(h);
+  const pOk = isHex(p);
+  if (hOk && pOk) {
+    if (h.toLowerCase() === p.toLowerCase()) return h;
+    // 欄位不同步時，優先採用「非預設值」
+    if (h.toLowerCase() !== fallback.toLowerCase() && p.toLowerCase() === fallback.toLowerCase()) return h;
+    if (p.toLowerCase() !== fallback.toLowerCase() && h.toLowerCase() === fallback.toLowerCase()) return p;
+    return h;
+  }
+  if (hOk) return h;
+  if (pOk) return p;
+  return fallback;
+}
+function getThemeColors() {
+  const pHex = (document.getElementById('f-color-primary-hex')?.value || '').trim();
+  const pPick = (document.getElementById('f-color-primary')?.value || '').trim();
+  const aHex = (document.getElementById('f-color-accent-hex')?.value || '').trim();
+  const aPick = (document.getElementById('f-color-accent')?.value || '').trim();
+  const primary = pickThemeColor(pHex, pPick, '#2e5283');
+  const accent  = pickThemeColor(aHex, aPick, '#9b8400');
+  // 背景色自動推算：主色與輔色各取 4%，混入白色
+  const bg = mixWithWhite(blendColors(primary, accent, 0.5), 0.04);
+  return { primary, accent, bg,
+    primaryDark:    darken(primary),
+    primaryLight:   lighten(primary, 0.28),
+    accentSoft:     hexToRgba(accent, 0.12),
+    primaryGlow:    hexToRgba(primary, 0.08),
+    sectionBgStart: mixWithWhite(primary, 0.12),  // 極淡主色
+    sectionBgMid:   mixWithWhite(accent,  0.10),  // 極淡強調色
+    sectionBgEnd:   mixWithWhite(accent,  0.17),  // 稍深強調色
+  };
+}
+
+function buildThemeCssOverride(tc) {
+  return [
+    `:root{--primary:${tc.primary};--primary-dark:${tc.primaryDark};--accent:${tc.accent};--accent-soft:${tc.accentSoft};--bg:${tc.bg};}`,
+    `.hero{background:${tc.bg}!important;}`,
+    `.highlights,.download-cta{background:linear-gradient(150deg,${tc.sectionBgStart} 0%,${tc.sectionBgMid} 55%,${tc.sectionBgEnd} 100%)!important;}`,
+    `.highlights::before{background:radial-gradient(circle,${tc.accentSoft} 0%,transparent 65%)!important;}`,
+    `.download-cta::before{background:radial-gradient(circle,${tc.primaryGlow} 0%,transparent 70%)!important;}`,
+    `.cta-button{background:linear-gradient(135deg,${tc.primary} 0%,${tc.primaryLight} 100%)!important;box-shadow:0 6px 20px ${hexToRgba(tc.primary,0.28)}!important;}`,
+  ].join('');
+}
+
+function getLastCssVarHex(cssText, varName) {
+  const re = new RegExp(`--${varName}\\s*:\\s*(#[0-9a-fA-F]{6})`, 'g');
+  let m;
+  let last = '';
+  while ((m = re.exec(cssText)) !== null) {
+    last = m[1];
+  }
+  return last;
+}
+
+/* ============================================================
+   Default feature data
+   ============================================================ */
+const defaultFeatures = [
+  { title: '整體資金的當日操作指南', desc: '分析當日資金動向，強化進出決策效率', img: '' },
+  { title: '整體資金的總持股',       desc: '揭露資金核心部位，洞察主力配置策略', img: '' },
+  { title: '完整ETF清單',            desc: '全部主動式ETF列表，掌握完整資訊',     img: '' },
+  { title: '單檔主動式ETF的操作日報', desc: '追蹤持股調整軌跡，掌握策略轉折訊號', img: '' },
+  { title: '主動式ETF的折溢價資訊',   desc: '揭露折溢價結構，優化交易時點判斷',   img: '' },
+  { title: '投資人討論區',            desc: '匯聚市場觀點交流，強化投資判斷深度',  img: '' },
+];
+
+let featureCount = 0;
+
+/* ============================================================
+   Image upload handlers
+   ============================================================ */
+const _uploads = {}; // { fieldId: { file, dataUrl, name } }
+
+// ZIP 路徑對照（下載時用）
+const _uploadZipPaths = {
+  'f-app-icon':      f => `assets/images/app-icon.${_ext(f)}`,
+  'f-hero-img':      f => `assets/images/hero.${_ext(f)}`,
+  'f-qrcode':        f => `assets/images/qrcode.${_ext(f)}`,
+  'f-ios-badge':     f => `assets/images/SharedImages/appstore-badge.${_ext(f)}`,
+  'f-android-badge': f => `assets/images/SharedImages/play-badge.${_ext(f)}`,
+};
+function _ext(file) { return file.name.split('.').pop().toLowerCase() || 'png'; }
+
+function triggerUpload(fieldId) {
+  document.getElementById('ufile-' + fieldId)?.click();
+}
+
+function handleUpload(fieldId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    _uploads[fieldId] = { file, dataUrl, name: file.name };
+    // 更新 hidden value
+    const hiddenEl = document.getElementById(fieldId);
+    if (hiddenEl) hiddenEl.value = dataUrl;
+    // 更新預覽
+    const preview = document.getElementById('upreview-' + fieldId);
+    const hint    = document.getElementById('uphint-'   + fieldId);
+    const icon    = document.getElementById('uicon-'    + fieldId);
+    const area    = document.getElementById('ua-'       + fieldId);
+    const clearBtn= document.getElementById('uclear-'   + fieldId);
+    if (preview) { preview.src = dataUrl; preview.style.display = ''; }
+    if (icon)    icon.style.display = 'none';
+    if (hint)    hint.textContent = file.name;
+    if (area)    area.classList.add('has-file');
+    if (clearBtn)clearBtn.style.display = '';
+    const hint2 = document.getElementById('uphint2-' + fieldId);
+    if (hint2) hint2.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  input.value = ''; // 允許重複選同一檔案
+}
+
+function clearUpload(fieldId, defaultVal) {
+  delete _uploads[fieldId];
+  const hiddenEl = document.getElementById(fieldId);
+  if (hiddenEl) hiddenEl.value = defaultVal || '';
+  const preview = document.getElementById('upreview-' + fieldId);
+  const hint    = document.getElementById('uphint-'   + fieldId);
+  const icon    = document.getElementById('uicon-'    + fieldId);
+  const area    = document.getElementById('ua-'       + fieldId);
+  const clearBtn= document.getElementById('uclear-'   + fieldId);
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (area)    area.classList.remove('has-file');
+  if (defaultVal) {
+    // 共用預設圖片（如徽章）：顯示預設圖片 + "使用預設"文字，隱藏 🗁 圖示
+    if (preview) { preview.src = defaultVal; preview.style.display = ''; }
+    if (icon)    icon.style.display = 'none';
+    if (hint)    hint.textContent = '使用預設';
+  } else {
+    // 一般上傳欄位：隱藏預覽，顯示 🗁 圖示
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    if (icon)    icon.style.display = '';
+    if (hint)    hint.textContent = fieldId === 'f-qrcode' ? '尚無QR Code 圖片' : '點擊上傳圖片';
+    const hint2 = document.getElementById('uphint2-' + fieldId);
+    if (hint2) hint2.style.display = '';
+  }
+}
+
+/* ============================================================
+   Section toggle (accordion)
+   ============================================================ */
+function toggleSection(btn) {
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', !expanded);
+  const body = btn.nextElementSibling;
+  body.classList.toggle('hidden', expanded);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name)?.classList.add('active');
+}
+
+/* ============================================================
+   Dynamic highlights list
+   ============================================================ */
+let hlCount = 0;
+
+const defaultHighlights = [
+  { icon: '🎯', title: '主動選股與擇時操作', stat: '目標打敗大盤', desc: '專業經理人主動操盤，具備順應盤勢與股價動能的靈活優勢' },
+  { icon: '📈', title: '代表性績效',        stat: '70.98 %',     desc: '00981A 掛牌僅 7 個月就達到 70.98% 的高報酬率，更是遠超 0050 同期的 46.29%' },
+];
+
+function collectHighlights() {
+  const items = document.querySelectorAll('.hl-item');
+  return Array.from(items).map((el, i) => {
+    const n = i + 1;
+    return {
+      icon:  (document.getElementById(`hl${n}-icon`)?.value  || '').trim(),
+      title: (document.getElementById(`hl${n}-title`)?.value || '').trim(),
+      stat:  (document.getElementById(`hl${n}-stat`)?.value  || '').trim(),
+      desc:  (document.getElementById(`hl${n}-desc`)?.value  || '').trim(),
+    };
+  });
+}
+
+function addHighlight(data = {}) {
+  if (hlCount >= 2) return;
+  hlCount++;
+  const n = hlCount;
+  const { icon = '', title = '', stat = '', desc = '' } = data;
+  const list = document.getElementById('highlights-list');
+  const item = document.createElement('div');
+  item.className = 'hl-item';
+  item.id = `hl-item-${n}`;
+  item.innerHTML = `
+    <div class="hl-item__header">
+      <span class="hl-item__num">${n}</span>
+      <span class="hl-item__title-text">亮點 ${n}</span>
+      <button class="btn--remove" onclick="removeHighlight(${n})" title="移除">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label>Icon（Emoji）</label>
+      <div class="emoji-picker-wrap" id="emoji-wrap-${n}">
+          <button type="button" class="emoji-trigger" onclick="toggleEmojiPicker(${n})">
+            <span class="emoji-preview" id="hl${n}-icon-preview">${esc(icon) || '🎯'}</span>
+            <span class="emoji-label">點擊更換</span>
+          </button>
+          <div class="emoji-dropdown" id="emoji-drop-${n}">
+            <div class="emoji-grid">
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'🎯')">🎯</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'📈')">📈</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'💡')">💡</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'🔥')">🔥</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'✅')">✅</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'⭐')">⭐</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'🔍')">🔍</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'💰')">💰</button>
+              <button type="button" class="emoji-opt" onclick="selectEmoji(${n},'📌')">📌</button>
+            </div>
+            <div class="emoji-custom-row">
+              <input type="text" id="emoji-custom-${n}" placeholder="手動輸入" maxlength="2" />
+              <button type="button" onclick="selectEmojiCustom(${n})">套用</button>
+            </div>
+          </div>
+          <input type="hidden" id="hl${n}-icon" value="${esc(icon) || '🎯'}">
+      </div>
+    </div>
+    <div class="field"><label>標題</label><input type="text" id="hl${n}-title" value="${esc(title)}" placeholder="建議12字元內。例：主動選股與擇時操作" /></div>
+    <div class="field"><label>強調資訊</label><input type="text" id="hl${n}-stat" value="${esc(stat)}" placeholder="例：目標打敗大盤" /></div>
+    <div class="field"><label>說明文字</label><textarea id="hl${n}-desc" style="min-height:56px" placeholder="簡要補充描述，也可留白不放">${esc(desc)}</textarea></div>`;
+  list.appendChild(item);
+  updateHlBtn();
+}
+
+function removeHighlight(n) {
+  if (hlCount <= 1) return;
+  const item = document.getElementById(`hl-item-${n}`);
+  if (item) item.remove();
+  hlCount--;
+  // Re-number
+  const items = document.querySelectorAll('.hl-item');
+  hlCount = 0;
+  items.forEach((el, i) => {
+    hlCount++;
+    const newN = hlCount;
+    el.id = `hl-item-${newN}`;
+    el.querySelector('.hl-item__num').textContent = newN;
+    el.querySelector('.hl-item__title-text').textContent = `亮點 ${newN}`;
+    el.querySelector('.btn--remove')?.setAttribute('onclick', `removeHighlight(${newN})`);
+    ['icon','title','stat','desc'].forEach(f => {
+      const inp = el.querySelector(`[id^="hl"][id$="-${f}"]`);
+      if (inp) inp.id = `hl${newN}-${f}`;
+    });
+  });
+  updateHlBtn();
+}
+
+function updateHlBtn() {
+  const btn = document.getElementById('add-hl-btn');
+  if (btn) btn.style.display = hlCount >= 2 ? 'none' : 'flex';
+  document.querySelectorAll('.hl-item .btn--remove').forEach(b => {
+    b.style.display = hlCount <= 1 ? 'none' : '';
+  });
+}
+
+function toggleEmojiPicker(n) {
+  document.querySelectorAll('.emoji-dropdown.open').forEach(d => {
+    if (d.id !== `emoji-drop-${n}`) d.classList.remove('open');
+  });
+  document.getElementById(`emoji-drop-${n}`)?.classList.toggle('open');
+}
+
+function selectEmoji(n, emoji) {
+  document.getElementById(`hl${n}-icon`).value = emoji;
+  document.getElementById(`hl${n}-icon-preview`).textContent = emoji;
+  document.getElementById(`emoji-drop-${n}`).classList.remove('open');
+}
+
+function selectEmojiCustom(n) {
+  const val = document.getElementById(`emoji-custom-${n}`)?.value.trim();
+  if (val) selectEmoji(n, val);
+}
+
+// 點擊 picker 外部時關閉
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.emoji-picker-wrap')) {
+    document.querySelectorAll('.emoji-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+/* ============================================================
+   Dynamic features list
+   ============================================================ */
+function addFeature(data = {}) {
+  if (featureCount >= 6) return;
+  featureCount++;
+  const idx = featureCount;
+  const { title = '', desc = '', img = '' } = data;
+  const list = document.getElementById('features-list');
+  const item = document.createElement('div');
+  item.className = 'feat-item';
+  item.id = `feat-item-${idx}`;
+  item.innerHTML = `
+    <div class="feat-item__header">
+      <span class="feat-item__num">${idx}</span>
+      <span class="feat-item__title-text">功能 ${idx}</span>
+      <div style="display:flex;align-items:center;gap:2px;margin-left:auto;">
+        <button class="btn--move" onclick="moveFeat(${idx},-1)" title="往上移">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn--move" onclick="moveFeat(${idx},1)" title="往下移">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 3v6M3 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn--remove" onclick="removeFeature(${idx})" title="移除">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="feat-item__fields">
+      <div class="field"><label>功能標題</label><input type="text" id="feat-title-${idx}" value="${esc(title)}" placeholder="建議12字元內。例：整體資金的當日操作指南" /></div>
+      <div class="field"><label>功能說明</label><textarea id="feat-desc-${idx}" style="min-height:52px" placeholder="建議24字元內。例：分析當日資金動向，強化進出決策效率">${esc(desc)}</textarea></div>
+      <div class="field">
+        <label>功能截圖</label>
+        <div class="upload-area" id="ua-feat-img-${idx}" onclick="triggerUpload('feat-img-${idx}')">
+          <img class="up-thumb" id="upreview-feat-img-${idx}" src="" style="display:none">
+          <span class="up-icon" id="uicon-feat-img-${idx}">📁</span>
+          <div class="up-info">
+            <span class="up-name" id="uphint-feat-img-${idx}">點擊上傳 App 截圖（自動套手機外框）</span>
+            <span class="up-hint">PNG / JPG / WebP</span>
+          </div>
+          <button type="button" class="upload-clear" id="uclear-feat-img-${idx}" style="display:none" onclick="event.stopPropagation();clearUpload('feat-img-${idx}','')">&#10005;</button>
+        </div>
+        <input type="file" id="ufile-feat-img-${idx}" accept="image/*" style="display:none" onchange="handleUpload('feat-img-${idx}',this)">
+        <input type="hidden" id="feat-img-${idx}" value="${esc(img)}">
+      </div>
+    </div>`;
+  list.appendChild(item);
+  updateAddBtn();
+}
+
+function moveFeat(idx, dir) {
+  const items = Array.from(document.querySelectorAll('.feat-item'));
+  const pos = items.findIndex(el => el.id === `feat-item-${idx}`);
+  const targetPos = pos + dir;
+  if (targetPos < 0 || targetPos >= items.length) return;
+  // 讀取兩張卡的資料
+  function readFeat(n) {
+    return {
+      title: document.getElementById(`feat-title-${n}`)?.value || '',
+      desc:  document.getElementById(`feat-desc-${n}`)?.value || '',
+      img:   document.getElementById(`feat-img-${n}`)?.value || '',
+      upload: _uploads[`feat-img-${n}`] || null,
+    };
+  }
+  const aIdx = parseInt(items[pos].id.replace('feat-item-',''));
+  const bIdx = parseInt(items[targetPos].id.replace('feat-item-',''));
+  const a = readFeat(aIdx), b = readFeat(bIdx);
+  // 寫入交換後的資料
+  function writeFeat(n, data) {
+    const titleEl = document.getElementById(`feat-title-${n}`);
+    const descEl  = document.getElementById(`feat-desc-${n}`);
+    const imgEl   = document.getElementById(`feat-img-${n}`);
+    if (titleEl) titleEl.value = data.title;
+    if (descEl)  descEl.value  = data.desc;
+    if (imgEl)   imgEl.value   = data.img;
+    // 更新上傳預覽
+    const previewEl = document.getElementById(`upreview-feat-img-${n}`);
+    const hintEl    = document.getElementById(`uphint-feat-img-${n}`);
+    const iconEl    = document.getElementById(`uicon-feat-img-${n}`);
+    const areaEl    = document.getElementById(`ua-feat-img-${n}`);
+    const clearEl   = document.getElementById(`uclear-feat-img-${n}`);
+    if (data.upload) {
+      _uploads[`feat-img-${n}`] = data.upload;
+      if (previewEl) { previewEl.src = data.upload.dataUrl; previewEl.style.display = ''; }
+      if (iconEl)    iconEl.style.display = 'none';
+      if (hintEl)    hintEl.textContent = data.upload.name;
+      if (areaEl)    areaEl.classList.add('has-file');
+      if (clearEl)   clearEl.style.display = '';
+    } else {
+      delete _uploads[`feat-img-${n}`];
+      if (previewEl) { previewEl.src = ''; previewEl.style.display = 'none'; }
+      if (iconEl)    iconEl.style.display = '';
+      if (hintEl)    hintEl.textContent = '點擊上傳 App 截圖（自動套手機外框）';
+      if (areaEl)    areaEl.classList.remove('has-file');
+      if (clearEl)   clearEl.style.display = 'none';
+    }
+  }
+  writeFeat(aIdx, b);
+  writeFeat(bIdx, a);
+}
+
+function removeFeature(idx) {
+  if (featureCount <= 1) return; // 最少保留 1 個
+  const item = document.getElementById(`feat-item-${idx}`);
+  if (item) item.remove();
+  featureCount--;
+  // Re-number remaining items
+  const items = document.querySelectorAll('.feat-item');
+  featureCount = 0;
+  items.forEach((el, i) => {
+    featureCount++;
+    const n = featureCount;
+    el.id = `feat-item-${n}`;
+    el.querySelector('.feat-item__num').textContent = n;
+    el.querySelector('.feat-item__title-text').textContent = `功能 ${n}`;
+    el.querySelector('[class="btn--remove"]')?.setAttribute('onclick', `removeFeature(${n})`);
+    // Rename input IDs
+    const inputs = el.querySelectorAll('[id^="feat-"]');
+    inputs.forEach(inp => {
+      const oldId = inp.id;
+      const parts = oldId.split('-');
+      parts[parts.length - 1] = n;
+      inp.id = parts.join('-');
+    });
+  });
+  updateAddBtn();
+}
+
+function updateAddBtn() {
+  const btn = document.getElementById('add-feat-btn');
+  btn.style.display = featureCount >= 6 ? 'none' : 'flex';
+  // 只剩 1 個時隱藏移除按鈕
+  document.querySelectorAll('.feat-item .btn--remove').forEach(b => {
+    b.style.display = featureCount <= 1 ? 'none' : '';
+  });
+}
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+function nl2br(str) { return str.replace(/\n/g, '<br>\n'); }
+
+/* ============================================================
+   Collect feature items from DOM
+   ============================================================ */
+function collectFeatures() {
+  const items = document.querySelectorAll('.feat-item');
+  return Array.from(items).map((_, i) => {
+    const n = i + 1;
+    return {
+      title: v(`feat-title-${n}`),
+      desc:  v(`feat-desc-${n}`),
+      img:   v(`feat-img-${n}`),
+    };
+  });
+}
+
+/* ============================================================
+   Generate HTML
+   ============================================================ */
+function generateHTML() {
+  const productName   = v('f-product-name')   || '產品名稱';
+  const brandSubtitle = v('f-brand-subtitle');
+  const appIcon       = v('f-app-icon');
+  const pageTitle     = v('f-page-title') || `${productName}｜${brandSubtitle}`;
+  const heroTitle     = v('f-hero-title')  || productName;
+  const heroIntroRaw  = document.getElementById('f-hero-intro')?.value?.trim() || '';
+  const heroIntro     = nl2br(heroIntroRaw);
+  const metaDesc      = v('f-meta-desc') || heroIntroRaw;
+  const ctaUrl        = v('f-cta-url');
+  const heroImg       = v('f-hero-img');
+  const hlSectionTitle= v('f-hl-title') || `Why ${productName} ?`;
+  const highlights = collectHighlights();
+
+  const featSectionTitle = v('f-feat-title') || '核心功能';
+  const features = collectFeatures();
+
+  const ctaEyebrow = v('f-cta-eyebrow');
+  const ctaH2      = v('f-cta-h2') || `立即下載${productName} 掌握先機`;
+  const ctaSub     = v('f-cta-sub');
+  const iosBadge   = v('f-ios-badge');
+  const androidBadge = v('f-android-badge');
+  const qrcode     = v('f-qrcode');
+  const company    = v('f-company');
+  const address    = v('f-address');
+  const year       = v('f-year') || new Date().getFullYear();
+
+  // Feature cards for desktop
+  const categoryClasses = ['category-guide','category-holding','category-list','category-report','category-premium','category-forum'];
+  const featureCardsDesktop = features.map((f, i) => `
+                <!-- 功能 ${i+1} -->
+                <div class="col col-4">
+                  <div class="category ${categoryClasses[i] || ''}" data-index="${i}" data-img="${esc(f.img)}">
+                    <h3 class="category__title">${esc(f.title)}</h3>
+                    <p class="category__desc">${esc(f.desc)}</p>
+                  </div>
+                </div>`).join('\n');
+
+  // Features overview items for mobile
+  const featuresOverviewItems = features.map((f, i) => `
+      <div class="features-overview__item">
+        <span class="features-overview__num">${i+1}</span>
+        <div>
+          <h4>${esc(f.title)}</h4>
+          <p>${esc(f.desc)}</p>
+        </div>
+      </div>`).join('\n');
+
+  // Mobile slider cards
+  const featureSliderCards = features.map(f => `
+    <div class="feature-card">
+      <h3>${esc(f.title)}</h3>
+      <p>${esc(f.desc)}</p>
+      ${f.img ? `<div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="${esc(f.img)}" alt="${esc(f.title)}" /></div><div class="phone-mockup__indicator"></div></div>` : ''}
+    </div>`).join('\n');
+
+  const firstFeatImg = features.length > 0 ? esc(features[0].img) : '';
+
+  // 主題色彩覆蓋 CSS
+  const tc = getThemeColors();
+  const themeCssOverride = buildThemeCssOverride(tc);
+
+  return `<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(pageTitle)}</title>
+    <meta name="description" content="${esc(metaDesc)}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+${EMBEDDED_CSS}
+/* === 主題色彩覆蓋 === */
+${themeCssOverride}
+    </style>
+  </head>
+  <body>
+    <!-- ========== Header ========== -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="#top">
+          ${appIcon ? `<img class="app-icon" src="${esc(appIcon)}" alt="${esc(productName)}" width="56" height="56" />` : ''}
+          <div class="brand-content">
+            <strong class="brand-title">${esc(productName)}</strong>
+            ${brandSubtitle ? `<span class="brand-subtitle">${esc(brandSubtitle)}</span>` : ''}
+          </div>
+        </a>
+        <div class="header-ctas">
+          <a href="#features" class="header-nav-btn header-nav-btn--ghost">特色功能</a>
+          <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">免費下載</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- ========== Hero ========== -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-body">
+            <div class="hero-text">
+              <h1 class="hero-title">${esc(heroTitle)}</h1>
+              <div class="hero-content">
+                <p class="hero-intro">${heroIntro}</p>
+                <div class="hero-ctas">
+                  <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">立即免費下載</button>
+                  <a href="#features" class="header-nav-btn header-nav-btn--ghost">看功能介紹</a>
+                </div>
+              </div>
+            </div>
+            <div class="hero-visual">
+              ${heroImg ? `<img src="${esc(heroImg)}" alt="${esc(heroTitle)} 主題圖" class="hero-theme-img" />` : ''}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== Highlights ========== -->
+      <section class="highlights">
+        <div class="container">
+          <div class="highlights-header">
+            <h2 class="highlights-title">${esc(hlSectionTitle)}</h2>
+          </div>
+          <div class="highlights-points" data-count="${highlights.length}">
+            ${highlights.map((h, i) => `
+            ${ i > 0 ? '<div class="highlights-divider"></div>' : '' }
+            <div class="highlights-point">
+              <div class="highlights-point__body">
+                <h3><span class="highlights-point__icon${ i === 1 ? ' highlights-point__icon--gold' : '' }">${esc(h.icon)}</span>${esc(h.title)}</h3>
+                <div class="highlights-perf">
+                  <div class="highlights-perf__main">
+                    <span class="highlights-stat__num">${esc(h.stat)}</span>
+                  </div>
+                </div>
+                <p class="highlights-point__desc">${esc(h.desc)}</p>
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== Features ========== -->
+      <section id="features" class="features">
+
+        <!-- Desktop & Tablet -->
+        <div class="feature__container feature__container--reverse">
+          <div class="feature__head">
+            <h2 class="section-title feature__section-title">${esc(featSectionTitle)}</h2>
+            <div class="feature__content">
+              <div class="cols cols-xs">
+${featureCardsDesktop}
+              </div>
+              <p class="feature__hint">✦ 點擊上方功能卡片可切換預覽畫面</p>
+            </div>
+          </div>
+          <figure class="feature__foot">
+            <div class="phone-mockup">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <img class="feature__img" id="feature-preview-img" src="${firstFeatImg}" alt="功能示意圖">
+              </div>
+              <div class="phone-mockup__indicator"></div>
+            </div>
+          </figure>
+        </div>
+
+        <!-- Mobile Slider -->
+        <div class="features-mobile">
+          <h2 class="features-mobile__title">${esc(featSectionTitle)}</h2>
+          <div class="features-overview">
+            <div class="features-overview__grid">
+${featuresOverviewItems}
+            </div>
+          </div>
+          <div class="features-slider-section">
+            <div class="features-slider-label">功能詳細圖覧</div>
+            <div class="features-slider">
+${featureSliderCards}
+            </div>
+            <div class="slider-arrows">
+              <button class="slider-arrow slider-arrow--prev" aria-label="上一張">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button class="slider-arrow slider-arrow--next" aria-label="下一張">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="slider-dots"></div>
+        </div>
+
+      </section>
+
+      <!-- ========== Download CTA ========== -->
+      <section id="download" class="download-cta">
+        <div class="container">
+          <div class="download-inner">
+            <div class="download-text">
+              <p class="download-eyebrow">${esc(ctaEyebrow)}</p>
+              <h2>${esc(ctaH2)}</h2>
+              <p class="download-subheading">${esc(ctaSub)}</p>
+              <div class="download-badges">
+                ${iosBadge ? `<a href="${esc(ctaUrl)}" target="_blank" rel="noreferrer" class="store-link"><img src="${esc(iosBadge)}" alt="下載 iOS" class="store-badge-large" /></a>` : ''}
+                ${androidBadge ? `<a href="${esc(ctaUrl)}" target="_blank" rel="noreferrer" class="store-link"><img src="${esc(androidBadge)}" alt="下載 Android" class="store-badge-large" /></a>` : ''}
+              </div>
+            </div>
+            ${qrcode ? `<div class="download-qr"><img src="${esc(qrcode)}" alt="掃描 QR Code 下載" class="download-qr__img" /></div>` : ''}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========== Footer ========== -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            ${appIcon ? `<img src="${esc(appIcon)}" alt="${esc(productName)}" class="footer-icon" />` : ''}
+            <h3>${esc(productName)}</h3>
+          </div>
+          <div class="footer-bottom">
+            <p class="footer-company">版權所有 ${esc(company)}</p>
+            <p class="footer-address">聯絡地址：${esc(address)}</p>
+            <p class="footer-copyright">Copyright &copy; ${esc(String(year))} CMoney Corporation. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    ${qrcode ? `
+    <div id="qr-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeQrModal()">
+      <div style="background:#fff;border-radius:20px;padding:24px 28px;text-align:center;max-width:320px;width:90%;position:relative;box-shadow:0 24px 64px rgba(0,0,0,0.3);">
+        <button onclick="closeQrModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">&times;</button>
+        <img src="assets/images/SharedImages/cellphone_downloadCTA.png" alt="手機掃描下載" style="width:100%;max-width:240px;height:auto;display:block;margin:0 auto 16px;" />
+        <img src="${esc(qrcode)}" alt="掃描 QR Code 下載" style="width:220px;height:220px;object-fit:contain;border-radius:8px;" />
+      </div>
+    </div>` : ''}
+
+    <script>
+      (function() {
+        function initDesktopFeatures() {
+          const categories = document.querySelectorAll('.category');
+          const previewImg = document.getElementById('feature-preview-img');
+          if (!categories.length || !previewImg) return;
+          let currentIndex = 0;
+          function updateActive(index) {
+            categories.forEach((cat, i) => cat.classList.toggle('active', i === index));
+            const newImgSrc = categories[index].getAttribute('data-img');
+            if (newImgSrc) previewImg.src = newImgSrc;
+          }
+          categories.forEach((cat, i) => cat.addEventListener('click', () => { currentIndex = i; updateActive(i); }));
+          updateActive(0);
+        }
+
+        function initMobileSlider() {
+          const wrapper = document.querySelector('.features-mobile');
+          const slider = document.querySelector('.features-slider');
+          const dotsContainer = document.querySelector('.features-mobile .slider-dots');
+          if (!slider || !wrapper) return;
+          const origCards = Array.from(slider.querySelectorAll('.feature-card'));
+          const total = origCards.length;
+          let currentSlide = 1;
+          let startX = 0;
+          let isDragging = false;
+          origCards.forEach((card, i) => {
+            const h3 = card.querySelector('h3');
+            if (h3 && !h3.querySelector('.card-num')) {
+              const num = document.createElement('span');
+              num.className = 'card-num';
+              num.textContent = i + 1;
+              h3.insertBefore(num, h3.firstChild);
+            }
+          });
+          const firstClone = origCards[0].cloneNode(true);
+          const lastClone = origCards[total - 1].cloneNode(true);
+          firstClone.setAttribute('aria-hidden', 'true');
+          lastClone.setAttribute('aria-hidden', 'true');
+          slider.appendChild(firstClone);
+          slider.insertBefore(lastClone, origCards[0]);
+          const allCards = Array.from(slider.querySelectorAll('.feature-card'));
+          function setCardWidths() {
+            const w = wrapper.offsetWidth;
+            allCards.forEach(card => { card.style.width = w + 'px'; });
+            return w;
+          }
+          function getCardWidth() { return wrapper.offsetWidth; }
+          origCards.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.className = 'slider-dot';
+            if (index === 0) dot.classList.add('active');
+            dot.setAttribute('aria-label', '切換到第 ' + (index + 1) + ' 個功能');
+            dot.addEventListener('click', () => goToSlide(index + 1));
+            dotsContainer && dotsContainer.appendChild(dot);
+          });
+          const dots = Array.from(dotsContainer ? dotsContainer.querySelectorAll('.slider-dot') : []);
+          function updateDots(index) {
+            const dotIndex = ((index - 1) % total + total) % total;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === dotIndex));
+          }
+          function jumpTo(index) {
+            slider.style.transition = 'none';
+            slider.style.transform = 'translateX(-' + (index * getCardWidth()) + 'px)';
+            currentSlide = index;
+          }
+          function goToSlide(index) {
+            currentSlide = index;
+            slider.style.transition = 'transform 0.35s ease';
+            slider.style.transform = 'translateX(-' + (index * getCardWidth()) + 'px)';
+            updateDots(index);
+          }
+          slider.addEventListener('transitionend', () => {
+            if (currentSlide === 0) { jumpTo(total); updateDots(total); }
+            else if (currentSlide === total + 1) { jumpTo(1); updateDots(1); }
+          });
+          const prevBtn = wrapper.querySelector('.slider-arrow--prev');
+          const nextBtn = wrapper.querySelector('.slider-arrow--next');
+          if (prevBtn) prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+          if (nextBtn) nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+          wrapper.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; isDragging = true; slider.style.transition = 'none'; }, { passive: true });
+          wrapper.addEventListener('touchmove', (e) => { if (!isDragging) return; const diff = e.touches[0].clientX - startX; slider.style.transform = 'translateX(' + (-(currentSlide * getCardWidth()) + diff) + 'px)'; }, { passive: true });
+          wrapper.addEventListener('touchend', (e) => { if (!isDragging) return; isDragging = false; const diff = e.changedTouches[0].clientX - startX; const threshold = getCardWidth() * 0.25; if (diff < -threshold) goToSlide(currentSlide + 1); else if (diff > threshold) goToSlide(currentSlide - 1); else goToSlide(currentSlide); });
+          window.addEventListener('resize', () => { setCardWidths(); jumpTo(currentSlide); });
+          setCardWidths(); jumpTo(1); updateDots(1);
+        }
+
+        initDesktopFeatures();
+        initMobileSlider();
+
+        // 下載按鈕行為：預覽模式由 parent postMessage 注入，下載檔則用 UA 偵測
+        // iframe 環境中預設 desktop，避免 postMessage 時序問題導致漏判
+        var _previewMode = (window.parent !== window) ? 'desktop' : null;
+        if (window.parent !== window) {
+          window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'setPreviewMode') {
+              _previewMode = e.data.mode;
+            }
+          });
+        }
+        window.handleDownload = function() {
+          var useDesktop;
+          if (_previewMode !== null) {
+            useDesktop = _previewMode === 'desktop';
+          } else {
+            useDesktop = window.innerWidth >= 1024 && !/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+          }
+          if (useDesktop) {
+            var modal = document.getElementById('qr-modal');
+            if (modal) { modal.style.display = 'flex'; }
+            else { var el = document.getElementById('download'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }
+          } else {
+            var el2 = document.getElementById('download');
+            if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+          }
+        };
+        window.closeQrModal = function() {
+          var modal = document.getElementById('qr-modal');
+          if (modal) modal.style.display = 'none';
+        };
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') window.closeQrModal && window.closeQrModal();
+        });
+      })();
+    <\/script>
+  </body>
+</html>`;
+}
+
+/* ============================================================
+   Embedded CSS (from styles.css)
+   ============================================================ */
+const EMBEDDED_CSS = `@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap");
+
+:root {
+  --primary: #2e5283;
+  --primary-dark: #1f3b63;
+  --accent: #9b8400;
+  --accent-soft: #faf4d9;
+  --bg: #f9f7f2;
+  --bg-light: #ffffff;
+  --card: #ffffff;
+  --text: #1a1f2b;
+  --text-soft: #5a636f;
+  --text-lighter: #8a929e;
+  --border: #e0ddd6;
+  --shadow-sm: rgba(0, 0, 0, 0.06);
+  --shadow-md: rgba(0, 0, 0, 0.12);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
+.container { width: min(1200px, 90vw); margin: 0 auto; }
+
+/* HEADER */
+.site-header { position: sticky; top: 0; z-index: 999; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px var(--shadow-sm); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.app-icon { width: 48px; height: 48px; border-radius: 12px; display: block; flex-shrink: 0; }
+.brand-content { display: flex; flex-direction: column; gap: 2px; }
+.brand-title { font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--text); }
+.brand-subtitle { font-size: 13px; color: var(--text-lighter); line-height: 1.2; }
+.header-ctas { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.header-nav-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.2s ease; cursor: pointer; }
+.header-nav-btn--ghost { color: var(--primary); border: 1.5px solid var(--primary); background: transparent; }
+.header-nav-btn--ghost:hover { background: rgba(46, 82, 131, 0.08); }
+.header-nav-btn--primary { color: #fff; background: var(--primary); border: 1.5px solid var(--primary); }
+.header-nav-btn--primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.store-link { display: inline-block; transition: transform 0.2s ease; }
+.store-link:hover { transform: scale(1.02); }
+
+/* BUTTONS */
+.cta-button { display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; border: none; cursor: pointer; transition: all 0.3s ease; text-decoration: none; white-space: nowrap; background: linear-gradient(135deg, var(--primary) 0%, #3d6fa0 100%); color: #fff; box-shadow: 0 6px 20px rgba(46,82,131,0.25); }
+.cta-button:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(46,82,131,0.35); }
+.cta-button.ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); box-shadow: none; }
+.cta-button.ghost:hover { background: rgba(46,82,131,0.05); transform: translateY(-1px); }
+
+/* HERO */
+.hero { padding: 72px 0; background: linear-gradient(135deg, rgba(46,82,131,0.03) 0%, rgba(155,132,0,0.02) 100%); }
+.hero-body { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.hero-text { display: flex; flex-direction: column; justify-content: center; }
+.hero-visual { display: flex; align-items: center; justify-content: center; }
+.hero-theme-img { width: 100%; max-width: 560px; height: auto; border-radius: 16px; display: block; object-fit: cover; box-shadow: 0 16px 48px rgba(0,0,0,0.12); }
+.hero-title { font-family: "Noto Serif TC", serif; font-size: clamp(32px, 5vw, 48px); font-weight: 700; margin: 0 0 8px; color: var(--primary); line-height: 1.1; }
+.hero-intro { font-size: 16px; line-height: 1.8; color: var(--text-soft); margin: 0 0 28px; }
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+
+/* HIGHLIGHTS */
+.highlights { padding: 72px 0; background: linear-gradient(150deg, #dce8f8 0%, #f0edda 55%, #e8dfc8 100%); position: relative; overflow: hidden; }
+.highlights::before { content: ''; position: absolute; top: -60px; right: -60px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(155,132,0,0.18) 0%, transparent 65%); pointer-events: none; }
+.highlights-header { text-align: center; margin-bottom: 56px; }
+.highlights-title { font-family: "Noto Serif TC", serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: var(--primary); margin: 0 0 16px; line-height: 1.2; }
+.highlights-points { display: flex; align-items: stretch; gap: 0; width: 100%; }
+.highlights-points[data-count="1"] { justify-content: center; align-items: center; }
+.highlights-point { flex: 1; display: flex; flex-direction: column; padding: 0 16px; }
+.highlights-points[data-count="1"] .highlights-point { flex: none; width: 100%; text-align: center; }
+.highlights-points[data-count="1"] .highlights-point__body { display: flex; flex-direction: column; align-items: center; }
+.highlights-points[data-count="1"] .highlights-point__body h3 { justify-content: center; }
+.highlights-points[data-count="1"] .highlights-point__desc { padding-left: 0; text-align: center; }
+.highlights-point:first-child { justify-content: flex-end; align-items: flex-end; padding-left: 0; padding-right: 16px; }
+.highlights-point:last-child { justify-content: flex-start; align-items: flex-start; padding-right: 0; padding-left: 16px; }
+.highlights-points[data-count="1"] .highlights-point:first-child { justify-content: center; align-items: center; padding: 0; }
+.highlights-points[data-count="1"] .highlights-point:last-child { justify-content: center; align-items: center; padding: 0; }
+.highlights-divider { width: 1px; background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent); flex-shrink: 0; align-self: stretch; }
+.highlights-point__icon { font-size: 28px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(46,82,131,0.15)); }
+.highlights-point__body h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 10px; line-height: 1.3; }
+.highlights-stat__num { font-family: "Noto Serif TC", serif; font-size: clamp(28px, 8vw, 52px); font-weight: 900; color: var(--accent); line-height: 1.1; letter-spacing: -1px; white-space: normal; word-break: break-word; }
+.highlights-stat__unit { font-size: 0.5em; font-weight: 700; vertical-align: baseline; }
+.highlights-perf { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 4px; }
+.highlights-perf__main { display: flex; align-items: baseline; gap: 6px; }
+.highlights-point__body .highlights-point__desc { font-size: 16px; color: var(--text-soft); margin: 16px 0 0; line-height: 1.8; }
+@media (max-width: 640px) {
+  .highlights-points { flex-direction: column; gap: 36px; }
+  .highlights-divider { width: 100%; height: 1px; background: linear-gradient(to right, transparent, var(--border) 20%, var(--border) 80%, transparent); }
+  .highlights-point, .highlights-point:first-child, .highlights-point:last-child { padding: 0; align-items: flex-start; justify-content: flex-start; }
+  .highlights-points[data-count="1"] .highlights-point, .highlights-points[data-count="1"] .highlights-point:first-child, .highlights-points[data-count="1"] .highlights-point:last-child { align-items: center; justify-content: center; }
+  .highlights-point__body h3 { font-size: 16px; }
+  .highlights-point__body .highlights-point__desc { font-size: 14px; }
+}
+
+/* FEATURES */
+.features { padding: 48px 0 40px; background: var(--bg); scroll-margin-top: 88px; }
+.section-title { font-family: "Noto Serif TC", serif; font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: var(--primary); margin: 0; line-height: 1.1; }
+.feature__section-title { text-align: left; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@media (max-width: 1023px) {
+  .feature__section-title { display: none; }
+  .features-mobile__title { font-family: "Noto Serif TC", serif; font-size: clamp(22px, 5vw, 32px); font-weight: 700; color: var(--primary); text-align: center; padding: 0 16px 20px; margin: 0; line-height: 1.3; }
+}
+.feature__container { display: none; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; width: min(1200px, 90vw); margin: 0 auto; }
+.feature__container--reverse { grid-template-columns: 1fr 1fr; }
+.feature__container--reverse .feature__head { order: 2; }
+.feature__container--reverse .feature__foot { order: 1; }
+@media (min-width: 1024px) { .feature__container { display: grid; } }
+.feature__head { display: flex; flex-direction: column; gap: 24px; }
+.feature__content { display: flex; flex-direction: column; gap: 16px; }
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cols.cols-xs { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
+.col { min-width: 0; }
+.col.col-4 { flex: 1; }
+.cols-xs { counter-reset: category-counter; }
+.category { counter-increment: category-counter; padding: 16px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); cursor: pointer; transition: all 0.25s ease; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; }
+.category:hover { border-color: var(--accent); background: rgba(155,132,0,0.03); transform: translateY(-2px); }
+.category.active { border-color: var(--accent); border-width: 1.5px; background: rgba(155,132,0,0.06); box-shadow: none; }
+.category.active .category__title { color: var(--accent); }
+.category__title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 8px; line-height: 1.4; }
+.category__title::before { content: counter(category-counter); display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; font-family: "Noto Serif TC", serif; flex-shrink: 0; transition: background 0.25s; }
+.category.active .category__title::before { background: var(--accent); }
+.category__desc { font-size: 16px; color: var(--text-soft); margin: 0; line-height: 1.6; padding-left: 32px; }
+.feature__hint { font-size: 13px; color: var(--text-lighter); text-align: center; padding-top: 12px; letter-spacing: 0.02em; }
+.features-mobile { display: none; width: 100%; overflow: hidden; position: relative; touch-action: pan-y pinch-zoom; }
+@media (max-width: 1023px) { .feature__container { display: none !important; } .features-mobile { display: block; } }
+.features-slider { display: flex; width: 100%; will-change: transform; }
+.feature-card { flex-shrink: 0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box; }
+.feature-card h3::before { display: none; }
+.feature-card h3 .card-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; font-family: "Noto Serif TC", serif; flex-shrink: 0; }
+.feature-card img { width: 100%; height: auto; max-height: 52vh; object-fit: contain; background: transparent; display: block; order: 1; }
+.feature-card h3 { font-size: 20px; font-weight: 700; color: var(--primary); margin: 16px 16px 8px; line-height: 1.3; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.feature-card p { font-size: 16px; color: var(--text-soft); margin: 0 16px 16px; line-height: 1.7; text-align: center; }
+.features-overview { padding: 0 16px 16px; }
+.features-slider-section { position: relative; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 4px; }
+.features-slider-label { font-size: 12px; font-weight: 600; color: var(--text-lighter); letter-spacing: 0.06em; text-align: center; padding: 10px 0 8px; }
+.features-overview__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.features-overview__item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); }
+.features-overview__num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.features-overview__item h4 { font-size: 14px; font-weight: 700; color: var(--primary); margin: 0 0 4px; line-height: 1.3; }
+.features-overview__item p { font-size: 12px; color: var(--text-soft); margin: 0; line-height: 1.5; }
+.slider-arrows { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; z-index: 10; }
+.slider-arrow { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.7); background: rgba(255,255,255,0.85); color: var(--primary); cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; pointer-events: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.12); backdrop-filter: blur(4px); }
+.slider-arrow:hover { border-color: var(--primary); background: rgba(46,82,131,0.06); transform: scale(1.08); }
+.slider-arrow:active { transform: scale(0.95); }
+.slider-dots { display: flex; gap: 8px; justify-content: center; padding: 20px 0 0; }
+.slider-dot { width: 10px; height: 10px; border: none; border-radius: 50%; background: rgba(26,31,43,0.2); cursor: pointer; transition: all 0.2s ease; }
+.slider-dot:hover { background: rgba(26,31,43,0.4); }
+.slider-dot.active { width: 28px; border-radius: 5px; background: var(--primary); box-shadow: 0 4px 12px rgba(46,82,131,0.25); }
+
+/* DOWNLOAD CTA */
+.download-cta { padding: 96px 0; background: linear-gradient(150deg, #dce8f8 0%, #f0edda 55%, #e8dfc8 100%); position: relative; overflow: hidden; }
+.download-cta::before { content: ''; position: absolute; top: -80px; left: -80px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(46,82,131,0.08) 0%, transparent 70%); pointer-events: none; }
+.download-inner { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 80px; text-align: center; }
+.download-qr { flex-shrink: 0; }
+.download-qr__img { width: clamp(160px, 18vw, 240px); height: auto; display: block; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.download-eyebrow { font-size: 16px; font-weight: 600; color: var(--accent); letter-spacing: 0.08em; margin: 0 0 12px; }
+.download-text h2 { font-family: "Noto Serif TC", serif; font-size: clamp(28px, 3.5vw, 44px); font-weight: 700; color: var(--primary); margin: 0 0 12px; line-height: 1.2; }
+.download-subheading { font-size: 18px; color: var(--text-soft); margin: 0 0 28px; line-height: 1.7; }
+.download-badges { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.store-badge-large { height: 48px; display: block; transition: transform 0.2s ease; }
+.store-badge-large:hover { transform: translateY(-2px); }
+@media (max-width: 768px) { .download-inner { flex-direction: column; text-align: center; } .download-qr { display: none; } .download-badges { justify-content: center; } }
+
+/* PHONE MOCKUP — iPhone 16 官方參數縮放版 (scale ≈ 0.589) */
+/* 官方: 外圓角69px, 內圓角55px, 邊框14px → 縮放後: 41px, 32px, 8px */
+.phone-mockup {
+  position: relative;
+  width: 248px;
+  background: #232426;
+  border-radius: 41px;
+  padding: 8px;
+  box-shadow: none;
+}
+/* 左側：動作鍵(14px) + 音量+(26px) + 音量-(26px) */
+.phone-mockup::before {
+  content: '';
+  position: absolute;
+  left: -2px; top: 88px;
+  width: 2px; height: 14px;
+  background: #3a3a3c;
+  border-radius: 1.5px;
+  box-shadow: 0 21px 0 2px #3a3a3c, 0 53px 0 2px #3a3a3c;
+}
+/* 右側：電源鍵(35px) */
+.phone-mockup::after {
+  content: '';
+  position: absolute;
+  right: -2px; top: 109px;
+  width: 2px; height: 35px;
+  background: #3a3a3c;
+  border-radius: 1.5px;
+}
+/* Dynamic Island：官方110×30px → 65×18px，距螢幕頂8px */
+.phone-mockup__notch {
+  position: absolute;
+  top: 9px; /* padding(8) + 1 */
+  left: 50%; transform: translateX(-50%);
+  width: 65px; height: 18px;
+  background: #0a0a0a;
+  border-radius: 11px;
+  z-index: 3;
+}
+/* 螢幕：內圓角 = 41 - 8 - 1 = 32px，高度維持9:19.5比例 */
+.phone-mockup__screen {
+  border-radius: 32px;
+  overflow: hidden;
+  background: #fff;
+  height: 503px;
+}
+.phone-mockup .phone-mockup__screen img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: top !important;
+  display: block !important;
+  max-height: none !important;
+}
+.phone-mockup__indicator { display: none; }
+/* small variant */
+.phone-mockup--sm {
+  width: 172px;
+  border-radius: 29px;
+  padding: 6px;
+  margin: 12px auto 0;
+}
+.phone-mockup--sm .phone-mockup__notch { width: 45px; height: 15px; border-radius: 8px; top: 11px; }
+.phone-mockup--sm .phone-mockup__screen { border-radius: 22px; height: 349px; }
+.phone-mockup--sm::before { top: 61px; height: 10px; box-shadow: 0 15px 0 2px #3a3a3c, 0 37px 0 2px #3a3a3c; }
+.phone-mockup--sm::after { top: 76px; height: 24px; }
+.phone-frame { display: contents; }
+.feature__img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: top !important; display: block !important; max-height: none !important; }
+.feature__foot { display: flex; justify-content: center; align-items: center; margin: 0; background: transparent !important; }
+figure.feature__foot { background: transparent !important; }
+@media (max-width: 1023px) { .phone-mockup:not(.phone-mockup--sm) { display: none; } }
+
+/* FOOTER */
+.site-footer { background: var(--bg-light); border-top: 1px solid var(--border); padding: 20px 0; }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.footer-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.footer-icon { width: 36px; height: 36px; border-radius: 8px; display: block; }
+.footer-brand h3 { font-size: 14px; font-weight: 700; margin: 0; color: var(--text); white-space: nowrap; }
+.footer-bottom { text-align: right; }
+.footer-company, .footer-address, .footer-copyright { font-size: 12px; color: var(--text-lighter); margin: 2px 0; line-height: 1.6; }
+
+/* RESPONSIVE */
+@media (min-width: 1024px) { .features-mobile { display: none; } }
+@media (max-width: 768px) {
+  .header-inner { flex-wrap: wrap; gap: 12px; padding: 12px 0; }
+  .header-nav-btn { padding: 6px 14px; font-size: 13px; }
+  .hero { padding: 48px 0 0; }
+  .hero-body { grid-template-columns: 1fr; gap: 24px; }
+  .hero-visual { order: -1; margin-top: -48px; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; }
+  .hero-theme-img { width: 100%; max-width: 100%; border-radius: 0; box-shadow: none; }
+  .hero-text { padding: 0 0 10px; }
+  .highlights { padding: 48px 0; }
+  .features { padding: 60px 0; }
+  .download-cta { padding: 60px 0; }
+}
+@media (max-width: 480px) {
+  .hero-title { font-size: 28px; }
+  .hero-intro { font-size: 14px; margin-bottom: 20px; }
+  .hero-ctas { gap: 8px; margin-bottom: 16px; }
+  .footer-inner { flex-direction: column; align-items: center; gap: 12px; }
+  .footer-bottom { text-align: center; }
+}`;
+
+/* ============================================================
+   Preview
+   ============================================================ */
+function setPreviewMode(mode) {
+  const wrap = document.getElementById('preview-iframe-wrap');
+  const btnDesktop = document.getElementById('btn-desktop');
+  const btnMobile = document.getElementById('btn-mobile');
+  if (!wrap) return;
+  if (mode === 'mobile') {
+    wrap.classList.replace('mode-desktop', 'mode-mobile');
+    btnMobile.classList.add('active');
+    btnDesktop.classList.remove('active');
+  } else {
+    wrap.classList.replace('mode-mobile', 'mode-desktop');
+    btnDesktop.classList.add('active');
+    btnMobile.classList.remove('active');
+  }
+  // 通知 iframe 目前的預覽模式
+  const iframe = document.getElementById('preview-iframe');
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'setPreviewMode', mode }, '*');
+  }
+}
+
+function clearAllSettings() {
+  // 清空文字欄位
+  ['f-product-name','f-brand-subtitle','f-hero-title','f-hero-intro','f-cta-url',
+   'f-hl-title','f-feat-title','f-cta-eyebrow','f-cta-h2','f-cta-sub',
+   'f-page-title','f-meta-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const companyEl = document.getElementById('f-company');
+  if (companyEl) companyEl.value = 'CMoney 全曜財經資訊股份有限公司';
+  const addressEl = document.getElementById('f-address');
+  if (addressEl) addressEl.value = '新北市板橋區文化路一段 268 號 12 樓之 2';
+  const yearEl = document.getElementById('f-year');
+  if (yearEl) yearEl.value = new Date().getFullYear();
+
+  // 清除上傳圖片
+  clearUpload('f-app-icon', '');
+  clearUpload('f-hero-img', '');
+  clearUpload('f-qrcode', '');
+  clearUpload('f-ios-badge', 'assets/images/SharedImages/appstore-badge@2x.png');
+  clearUpload('f-android-badge', 'assets/images/SharedImages/play-badge@2x.png');
+
+  // 清除所有 _uploads（含 feat 圖片）
+  Object.keys(_uploads).forEach(k => delete _uploads[k]);
+
+  // 重置亮點為一筆空白
+  document.getElementById('highlights-list').innerHTML = '';
+  hlCount = 0;
+  addHighlight({});
+  updateHlBtn();
+
+  // 重置功能為一筆空白
+  document.getElementById('features-list').innerHTML = '';
+  featureCount = 0;
+  addFeature({});
+  updateAddBtn();
+
+  // 重置配色為預設
+  document.getElementById('f-color-primary').value = '#2e5283';
+  document.getElementById('f-color-primary-hex').value = '#2e5283';
+  document.getElementById('f-color-accent').value = '#9b8400';
+  document.getElementById('f-color-accent-hex').value = '#9b8400';
+
+  // 隱藏預覽，顯示占位符
+  const iframeWrap = document.getElementById('preview-iframe-wrap');
+  const placeholder = document.getElementById('preview-placeholder');
+  if (iframeWrap) iframeWrap.style.display = 'none';
+  if (placeholder) placeholder.style.display = '';
+
+  showToast('✓ 已清空所有設定值');
+}
+
+async function autoGenerateQR() {
+  const url = v('f-cta-url');
+  if (!url) { showToast('❌ 請先填入「下載連結 (URL)」'); return; }
+  if (typeof qrcode === 'undefined') { showToast('❌ QR 程式庫未載入，請重新整理頁面'); return; }
+  try {
+    const SIZE = 400, LOGO_RATIO = 0.18, LOGO_PAD = 6;
+
+    // 使用最低可接受 type 搭配 M 級容錯（無 logo 時用 M，有 logo 時升為 H）
+    const icon = v('f-app-icon');
+    const ecLevel = icon ? 'H' : 'M';
+    let qr = null;
+    for (let t = 1; t <= 40; t++) {
+      try { const q = qrcode(t, ecLevel); q.addData(url); q.make(); qr = q; break; } catch (e) { /* next type */ }
+    }
+    if (!qr) throw new Error('URL 過長');
+
+    const mc = qr.getModuleCount();
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE; canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+
+    // quiet zone：最少 4 模組 * cell 大小
+    const QZ = 4;
+    const cell = SIZE / (mc + QZ * 2);
+    const ox = Math.round(QZ * cell);  // 繪製起點 x
+    const oy = Math.round(QZ * cell);  // 繪製起點 y
+
+    // 白色背景
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    // 是否在 finder pattern 區域（含分隔帶）
+    function inFinder(r, c) {
+      return (r < 8 && c < 8) ||
+             (r < 8 && c >= mc - 8) ||
+             (r >= mc - 8 && c < 8);
+    }
+
+    // 繪製資料模組（精確尺寸，無間隙）
+    ctx.fillStyle = '#000000';
+    for (let r = 0; r < mc; r++) {
+      for (let c = 0; c < mc; c++) {
+        if (inFinder(r, c)) continue;
+        if (!qr.isDark(r, c)) continue;
+        const x = Math.round(ox + c * cell);
+        const y = Math.round(oy + r * cell);
+        const w = Math.round(ox + (c + 1) * cell) - x;
+        const h = Math.round(oy + (r + 1) * cell) - y;
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+
+    // 繪製 finder pattern（外框圓角小，內部清楚）
+    function drawFinder(row, col) {
+      const x = ox + col * cell;
+      const y = oy + row * cell;
+      const sz = 7 * cell;
+      const rad = cell * 0.25;  // 微小圓角，不影響辨識
+
+      function roundRect(rx, ry, rw, rh, rr) {
+        ctx.beginPath();
+        ctx.moveTo(rx + rr, ry);
+        ctx.arcTo(rx + rw, ry,     rx + rw, ry + rh, rr);
+        ctx.arcTo(rx + rw, ry + rh, rx,     ry + rh, rr);
+        ctx.arcTo(rx,      ry + rh, rx,     ry,      rr);
+        ctx.arcTo(rx,      ry,     rx + rw,  ry,      rr);
+        ctx.closePath();
+      }
+
+      // 外框黑
+      ctx.fillStyle = '#000000';
+      roundRect(x, y, sz, sz, rad);
+      ctx.fill();
+      // 內白
+      ctx.fillStyle = '#ffffff';
+      roundRect(x + cell, y + cell, sz - 2 * cell, sz - 2 * cell, rad * 0.5);
+      ctx.fill();
+      // 中心黑
+      ctx.fillStyle = '#000000';
+      roundRect(x + 2 * cell, y + 2 * cell, sz - 4 * cell, sz - 4 * cell, rad * 0.4);
+      ctx.fill();
+    }
+
+    drawFinder(0, 0);
+    drawFinder(0, mc - 7);
+    drawFinder(mc - 7, 0);
+
+    // 嵌入 App Icon 為 Logo（有上傳才加）
+    if (icon) {
+      const logoSz = SIZE * LOGO_RATIO;
+      const lx = (SIZE - logoSz) / 2;
+      const ly = (SIZE - logoSz) / 2;
+      await new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          // 白色邊框（遮蓋周圍模組，讓 logo 更清晰）
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(lx - LOGO_PAD, ly - LOGO_PAD, logoSz + LOGO_PAD * 2, logoSz + LOGO_PAD * 2);
+          // 繪製 logo
+          ctx.drawImage(img, lx, ly, logoSz, logoSz);
+          resolve();
+        };
+        img.onerror = resolve;
+        img.src = icon;
+      });
+    }
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const blob = await (await fetch(dataUrl)).blob();
+    fakeHandleUpload('f-qrcode', new File([blob], 'qrcode.png', { type: 'image/png' }), dataUrl);
+    showToast('✓ QR Code 已自動產生');
+  } catch (err) {
+    console.error(err); showToast('❌ QR Code 產生失敗：' + err.message);
+  }
+}
+
+function toggleFormPanel() {
+  document.body.classList.toggle('app-collapsed');
+  const btn = document.getElementById('btn-toggle-panel');
+  const isCollapsed = document.body.classList.contains('app-collapsed');
+  if (btn) {
+    if (isCollapsed) {
+      // 已收合 → 顯示 > 提示可展開
+      btn.title = '開啟側欄';
+      btn.setAttribute('aria-label', '開啟側欄');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg>`;
+    } else {
+      // 已展開 → 顯示 < 提示可收合
+      btn.title = '收起側欄，預覽完整的桌機版畫面';
+      btn.setAttribute('aria-label', '收起側欄');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l-5 5 5 5"/></svg>`;
+    }
+  }
+  
+  // 侧边栏宽度改变后，延迟直接重新初始化 iframe 内的功能卡片
+  // 不刷新整个预览，只重新绑定事件监听器和初始化状态
+  setTimeout(() => {
+    const iframe = document.getElementById('preview-iframe');
+    if (iframe && iframe.contentWindow) {
+      try {
+        if (typeof iframe.contentWindow.initDesktopFeatures === 'function') {
+          iframe.contentWindow.initDesktopFeatures();
+        }
+        if (typeof iframe.contentWindow.reinitDesktopFeaturesIfNeeded === 'function') {
+          iframe.contentWindow.reinitDesktopFeaturesIfNeeded();
+        }
+      } catch (e) {
+        // 跨域错误，忽略
+      }
+    }
+  }, 280); // 等待 CSS transition 完成
+}
+
+function previewPage() {
+  const html = generateHTML();
+  const baseHref = window.location.href.replace(/\/[^\/]*$/, '/');
+  // 將相對路徑轉為絕對路徑（僅用於預覽，下載版保留相對路徑）
+  // 同時轉換 data-img 屬性，避免 initDesktopFeatures() 讀取相對路徑後在 blob iframe 中解析失敗
+  const previewHtml = html.replace(/(\ssrc="|\shref="|\sdata-img=")(?!https?:\/\/|\/\/|#|data:)([^"]+)/g,
+    (_, attr, path) => `${attr}${baseHref}${path}`);
+  const placeholder = document.getElementById('preview-placeholder');
+  const iframeWrap = document.getElementById('preview-iframe-wrap');
+  const iframe = document.getElementById('preview-iframe');
+  placeholder.style.display = 'none';
+  iframeWrap.style.display = 'block';
+  const blob = new Blob([previewHtml], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  iframe.src = url;
+  // iframe 載入後發送目前模式
+  const currentMode = document.getElementById('preview-iframe-wrap').classList.contains('mode-mobile') ? 'mobile' : 'desktop';
+  iframe.onload = () => {
+    const msg = { type: 'setPreviewMode', mode: currentMode };
+    // 立即送一次，再延遲補送一次確保 iframe 內的監聽器已就緒
+    iframe.contentWindow.postMessage(msg, '*');
+    setTimeout(() => iframe.contentWindow.postMessage(msg, '*'), 200);
+  };
+}
+
+function refreshPreviewIfVisible() {
+  const iframeWrap = document.getElementById('preview-iframe-wrap');
+  if (iframeWrap && iframeWrap.style.display !== 'none') {
+    previewPage();
+  }
+}
+
+/* ============================================================
+   共用圖片清單（每次打包都自動納入，不需手動設定）
+   ============================================================ */
+const SHARED_ASSETS = [
+  'assets/images/SharedImages/appstore-badge.png',
+  'assets/images/SharedImages/appstore-badge@2x.png',
+  'assets/images/SharedImages/play-badge.png',
+  'assets/images/SharedImages/play-badge@2x.png',
+  'assets/images/SharedImages/cellphone_downloadCTA.png',
+];
+
+const DEFAULT_SHOWCASE_FOLDER = 'LandingPage_chipk';
+
+/* ============================================================
+   Download ZIP
+   ============================================================ */
+async function downloadZIP() {
+  const productName = v('f-product-name') || 'product';
+  const safeName = productName.replace(/[^\w\u4e00-\u9fff]/g, '');
+  const folderName = `LandingPage_${safeName}`;
+
+  // 匯出前先解決色碼欄位不同步，並同步回 picker+hex，避免回退預設值
+  const resolved = getThemeColors();
+  const pHexEl = document.getElementById('f-color-primary-hex');
+  const pPickEl = document.getElementById('f-color-primary');
+  const aHexEl = document.getElementById('f-color-accent-hex');
+  const aPickEl = document.getElementById('f-color-accent');
+  if (pHexEl) pHexEl.value = resolved.primary;
+  if (pPickEl) pPickEl.value = resolved.primary;
+  if (aHexEl) aHexEl.value = resolved.accent;
+  if (aPickEl) aPickEl.value = resolved.accent;
+
+  // 產生 HTML，並把當下使用中的 style 內容抽出成 styles.css（避免顏色不同步）
+  const fullHtml = generateHTML();
+  const styleMatch = fullHtml.match(/<style>\s*([\s\S]*?)\s*<\/style>/i);
+  const tc = getThemeColors();
+  const finalThemeVars = `\n/* === Final Theme Vars (export-time) === */\n:root{--primary:${tc.primary};--primary-dark:${tc.primaryDark};--accent:${tc.accent};--accent-soft:${tc.accentSoft};--bg:${tc.bg};}\n`;
+  let cssForZip = (styleMatch ? styleMatch[1] : EMBEDDED_CSS) + finalThemeVars;
+  // 直接覆寫 base :root 的預設值，避免在任何情境下落回初始配色
+  cssForZip = cssForZip
+    .replace(/(--primary\s*:)\s*#[0-9a-fA-F]{6}/, `$1 ${tc.primary}`)
+    .replace(/(--primary-dark\s*:)\s*#[0-9a-fA-F]{6}/, `$1 ${tc.primaryDark}`)
+    .replace(/(--accent\s*:)\s*#[0-9a-fA-F]{6}/, `$1 ${tc.accent}`)
+    .replace(/(--bg\s*:)\s*#[0-9a-fA-F]{6}/, `$1 ${tc.bg}`);
+  let html = fullHtml.replace(
+    /<style>[\s\S]*?<\/style>/i,
+    `<link rel="stylesheet" href="styles.css" />`
+  );
+
+  const zip = new JSZip();
+  const folder = zip.folder(folderName);
+  // styles.css（完全等同當下預覽 style）
+  folder.file('styles.css', cssForZip);
+
+  // ── 處理使用者上傳的圖片：替換 HTML 中的 data URL → 相對路徑，並加入 ZIP ──
+  for (const [fieldId, up] of Object.entries(_uploads)) {
+    let zipPath;
+    if (fieldId.startsWith('feat-img-')) {
+      const n = fieldId.replace('feat-img-', '');
+      zipPath = `assets/images/features/feat${n}.${_ext(up.file)}`;
+    } else if (_uploadZipPaths[fieldId]) {
+      zipPath = _uploadZipPaths[fieldId](up.file);
+    } else continue;
+    html = html.split(up.dataUrl).join(zipPath); // 全部替換
+    folder.file(zipPath, up.file);
+  }
+
+  // ── 備援：掃描 HTML 中仍有 showcase 前綴的路徑 ──
+  // previewPage() 會把所有路徑轉成絕對 URL，所以預覽永遠正常，但 ZIP 需要相對路徑
+  // 若 setShowcaseImageAsync 的 fetch 未完成，HTML 會殘留 LandingPage_chipk/ 前綴
+  const showcasePrefix = DEFAULT_SHOWCASE_FOLDER + '/';
+  const scRegex = new RegExp(
+    showcasePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^"\'\\s>]+', 'g'
+  );
+  const foundShowcasePaths = [...new Set(html.match(scRegex) || [])];
+  const showcaseFetches = foundShowcasePaths.map(showcasePath => {
+    const zipPath = showcasePath.slice(showcasePrefix.length); // 去除前綴取標準路徑
+    html = html.split(showcasePath).join(zipPath);             // 替換 HTML 中的路徑
+    return fetch(showcasePath)                                 // 從 showcase 資料夾 fetch 圖片
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(buf => folder.file(zipPath, buf))                  // 存入 ZIP 的標準路徑
+      .catch(() => {});
+  });
+
+  // ── 收集本地 assets/ 路徑（共用圖片 + hidden input 中的相對路徑）──
+  const assetUrls = new Set(SHARED_ASSETS);
+  document.querySelectorAll('input[type=hidden]').forEach(input => {
+    const val = input.value.trim();
+    if (val && val.startsWith('assets/') && !val.startsWith('data:')) assetUrls.add(val);
+  });
+
+  const fetchPromises = [];
+  assetUrls.forEach(assetPath => {
+    const p = fetch(assetPath)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(buf => folder.file(assetPath, buf))
+      .catch(() => {});
+    fetchPromises.push(p);
+  });
+
+  await Promise.all([...fetchPromises, ...showcaseFetches]);
+
+  // index.html（需在 data URL 轉檔路徑後再寫入）
+  folder.file('index.html', html);
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${folderName}.zip`;
+  a.click();
+  showToast(`✓ 已打包下載 ${folderName}.zip`);
+}
+
+/* ============================================================
+   Import ZIP
+   ============================================================ */
+async function importZIP(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  try {
+    const zip = await JSZip.loadAsync(file);
+    // 找 index.html（可能在子資料夾或根目錄）
+    let htmlEntry = Object.values(zip.files).find(f => !f.dir && f.name.endsWith('index.html'));
+    if (!htmlEntry) { showToast('❌ 找不到 index.html'); return; }
+    const htmlStr = await htmlEntry.async('string');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlStr, 'text/html');
+
+    // 輔助：從 doc 取文字
+    const gt = (sel) => doc.querySelector(sel)?.textContent?.trim() || '';
+    const ga = (sel, attr) => doc.querySelector(sel)?.getAttribute(attr)?.trim() || '';
+
+    // --- 1. Header ---
+    const productName = gt('.brand-title');
+    const brandSubtitle = gt('.brand-subtitle');
+    if (productName) document.getElementById('f-product-name').value = productName;
+    if (brandSubtitle) document.getElementById('f-brand-subtitle').value = brandSubtitle;
+
+    // App Icon
+    const iconSrc = ga('.app-icon', 'src');
+    if (iconSrc) await importImg('f-app-icon', iconSrc, zip, htmlEntry.name);
+
+    // --- 2. Hero ---
+    const heroTitle = gt('.hero-title');
+    const heroIntro = (doc.querySelector('.hero-intro')?.innerHTML || '')
+      .replace(/<br\s*\/?>\s*/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .trim();
+    const ctaUrl = ga('.hero-ctas button[onclick="handleDownload()"]', 'onclick') || '';
+    const heroImgSrc = ga('.hero-theme-img', 'src');
+    if (heroTitle) document.getElementById('f-hero-title').value = heroTitle;
+    if (heroIntro) document.getElementById('f-hero-intro').value = heroIntro;
+    if (heroImgSrc) await importImg('f-hero-img', heroImgSrc, zip, htmlEntry.name);
+
+    // CTA URL from store badges
+    const badgeLink = ga('.store-link', 'href');
+    if (badgeLink) document.getElementById('f-cta-url').value = badgeLink;
+
+    // --- 3. Highlights ---
+    const hlTitle = gt('.highlights-title');
+    if (hlTitle) document.getElementById('f-hl-title').value = hlTitle;
+    // 直接清空並重建，避免最少保留一筆的保護邏輯造成無限迴圈
+    document.getElementById('highlights-list').innerHTML = '';
+    hlCount = 0;
+    const hlPoints = doc.querySelectorAll('.highlights-point__body');
+    hlPoints.forEach(el => {
+      const icon = el.querySelector('.highlights-point__icon')?.textContent?.trim() || '🎯';
+      const h3 = el.querySelector('h3');
+      const title = h3 ? h3.textContent.replace(icon, '').trim() : '';
+      const stat = el.querySelector('.highlights-stat__num')?.textContent?.trim() || '';
+      const desc = el.querySelector('.highlights-point__desc')?.textContent?.trim() || '';
+      addHighlight({ icon, title, stat, desc });
+    });
+    if (hlCount === 0) defaultHighlights.forEach(h => addHighlight(h));
+
+    // --- 4. Features ---
+    const featTitle = gt('.features-mobile__title') || gt('.feature__section-title');
+    if (featTitle) document.getElementById('f-feat-title').value = featTitle;
+    document.getElementById('features-list').innerHTML = '';
+    featureCount = 0;
+    const featCards = doc.querySelectorAll('.category');
+    const featImgs = doc.querySelectorAll('.feature__img, .features-slider .feature-card img');
+    const usedImgs = {};
+    doc.querySelectorAll('[data-img]').forEach((el, i) => { usedImgs[i] = el.getAttribute('data-img'); });
+    for (let i = 0; i < featCards.length; i++) {
+      const title = featCards[i].querySelector('.category__title')?.textContent?.trim() || '';
+      const desc  = featCards[i].querySelector('.category__desc')?.textContent?.trim() || '';
+      addFeature({ title, desc, img: '' });
+      const imgSrc = usedImgs[i] || '';
+      if (imgSrc) await importImg(`feat-img-${i+1}`, imgSrc, zip, htmlEntry.name);
+    }
+    if (featureCount === 0) defaultFeatures.forEach(f => addFeature(f));
+    updateHlBtn();
+    updateAddBtn();
+
+    // --- 5. Download CTA ---
+    const eyebrow = gt('.download-eyebrow');
+    const ctaH2 = gt('.download-cta h2');
+    const ctaSub = gt('.download-subheading');
+    if (eyebrow) document.getElementById('f-cta-eyebrow').value = eyebrow;
+    if (ctaH2) document.getElementById('f-cta-h2').value = ctaH2;
+    if (ctaSub) document.getElementById('f-cta-sub').value = ctaSub;
+    const iosSrc = ga('.store-link:first-of-type img', 'src');
+    const androidSrc = ga('.store-link:nth-of-type(2) img', 'src');
+    const qrSrc = ga('.download-qr__img', 'src');
+    if (iosSrc) await importImg('f-ios-badge', iosSrc, zip, htmlEntry.name);
+    if (androidSrc) await importImg('f-android-badge', androidSrc, zip, htmlEntry.name);
+    if (qrSrc) await importImg('f-qrcode', qrSrc, zip, htmlEntry.name);
+
+    // --- 7. Footer ---
+    const company = gt('.footer-company')?.replace('版權所有 ', '') || '';
+    const address = gt('.footer-address')?.replace('聯絡地址：', '') || '';
+    const year = gt('.footer-copyright')?.match(/\d{4}/)?.[0] || '';
+    if (company) document.getElementById('f-company').value = company;
+    if (address) document.getElementById('f-address').value = address;
+    if (year) document.getElementById('f-year').value = year;
+
+    // --- 顏色 ---
+    let styleText = doc.querySelector('style')?.textContent || '';
+    // 只挑本地 stylesheet，避免抓到 Google Fonts 造成找不到 zip 內 CSS
+    const cssHref = Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]'))
+      .map(el => (el.getAttribute('href') || '').trim())
+      .find(href => href && !/^https?:\/\//i.test(href) && !/^\/\//.test(href)) || '';
+    if ((!/--primary\s*:/.test(styleText) || !/--accent\s*:/.test(styleText)) && cssHref) {
+      const htmlBase = htmlEntry.name.includes('/') ? htmlEntry.name.replace(/\/[^/]+$/, '/') : '';
+      const cssPath = (htmlBase + cssHref.replace(/^\.\//, '')).replace(/^\//, '');
+      const cssEntry = zip.files[cssPath] || Object.values(zip.files).find(f => !f.dir && f.name.endsWith(cssHref.split('/').pop()));
+      if (cssEntry) styleText = await cssEntry.async('string');
+    }
+    const importedPrimary = getLastCssVarHex(styleText, 'primary');
+    const importedAccent = getLastCssVarHex(styleText, 'accent');
+    if (importedPrimary) {
+      document.getElementById('f-color-primary').value = importedPrimary;
+      document.getElementById('f-color-primary-hex').value = importedPrimary;
+    }
+    if (importedAccent) {
+      document.getElementById('f-color-accent').value = importedAccent;
+      document.getElementById('f-color-accent-hex').value = importedAccent;
+    }
+
+    // --- SEO ---
+    const pageTitle = gt('title');
+    const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    if (pageTitle) document.getElementById('f-page-title').value = pageTitle;
+    if (metaDesc) document.getElementById('f-meta-desc').value = metaDesc;
+
+    refreshSEOCountOnly();
+    previewPage();
+    showToast('✓ 已匯入，請確認欄位內容');
+  } catch(e) {
+    showToast('❌ 匯入失敗：' + e.message);
+  }
+}
+
+function refreshSEOCountOnly() {
+  const titleEl    = document.getElementById('f-page-title');
+  const descEl     = document.getElementById('f-meta-desc');
+  const titleCount = document.getElementById('seo-title-count');
+  const descCount  = document.getElementById('seo-desc-count');
+  if (titleCount) {
+    const len = titleEl?.value.length || 0;
+    titleCount.textContent = `${len} 字元（建議20字元內）`;
+    titleCount.style.color = len > 20 ? '#dc2626' : 'var(--text-lighter)';
+  }
+  if (descCount) {
+    const len = descEl?.value.length || 0;
+    descCount.textContent = `${len} 字元（建議150字元內）`;
+    descCount.style.color = len > 150 ? '#dc2626' : 'var(--text-lighter)';
+  }
+}
+
+// 從 ZIP 中讀取圖片並填入上傳欄位
+async function importImg(fieldId, src, zip, htmlPath) {
+  try {
+    let assetPath = src;
+    // 若是相對路徑，根據 htmlPath 的資料夾推算
+    const baseDir = htmlPath.includes('/') ? htmlPath.replace(/\/[^/]+$/, '/') : '';
+    if (!src.startsWith('data:') && !src.startsWith('http')) {
+      assetPath = baseDir + src.replace(/^\.\//, '');
+    }
+    if (src.startsWith('data:')) {
+      // base64 直接用
+      const blob = await fetch(src).then(r => r.blob());
+      const fakeFile = new File([blob], fieldId + '.png', { type: blob.type });
+      fakeHandleUpload(fieldId, fakeFile, src);
+      return;
+    }
+    // 從 ZIP 找對應圖片
+    const entry = zip.files[assetPath] || Object.values(zip.files).find(f => f.name.endsWith(src.split('/').pop()));
+    if (!entry) return;
+    const buf = await entry.async('arraybuffer');
+    const ext = entry.name.split('.').pop().toLowerCase();
+    const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : 'image/webp';
+    const blob = new Blob([buf], { type: mime });
+    const dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
+    const fakeFile = new File([blob], entry.name.split('/').pop(), { type: mime });
+    fakeHandleUpload(fieldId, fakeFile, dataUrl);
+  } catch(e) { /* 圖片不存在就跳過 */ }
+}
+
+function fakeHandleUpload(fieldId, file, dataUrl) {
+  _uploads[fieldId] = { file, dataUrl, name: file.name };
+  const hiddenEl = document.getElementById(fieldId);
+  if (hiddenEl) hiddenEl.value = dataUrl;
+  const preview = document.getElementById('upreview-' + fieldId);
+  const hint    = document.getElementById('uphint-'   + fieldId);
+  const icon    = document.getElementById('uicon-'    + fieldId);
+  const area    = document.getElementById('ua-'       + fieldId);
+  const clearBtn= document.getElementById('uclear-'   + fieldId);
+  if (preview) { preview.src = dataUrl; preview.style.display = ''; }
+  if (icon)    icon.style.display = 'none';
+  if (hint)    hint.textContent = file.name;
+  if (area)    area.classList.add('has-file');
+  if (clearBtn) clearBtn.style.display = '';
+  const hint2 = document.getElementById('uphint2-' + fieldId);
+  if (hint2) hint2.style.display = 'none';
+}
+
+function setDefaultPathImage(fieldId, src) {
+  const hiddenEl = document.getElementById(fieldId);
+  if (hiddenEl) hiddenEl.value = src;
+  const preview = document.getElementById('upreview-' + fieldId);
+  const hint    = document.getElementById('uphint-'   + fieldId);
+  const icon    = document.getElementById('uicon-'    + fieldId);
+  const area    = document.getElementById('ua-'       + fieldId);
+  const clearBtn= document.getElementById('uclear-'   + fieldId);
+  if (preview) { preview.src = src; preview.style.display = ''; }
+  if (icon)    icon.style.display = 'none';
+  if (hint)    hint.textContent = src.split('/').pop() || '已套用預設圖片';
+  if (area)    area.classList.add('has-file');
+  if (clearBtn) clearBtn.style.display = '';
+}
+
+// 非同步 fetch 圖片並存入 _uploads（供 ZIP 匯出使用）
+async function setShowcaseImageAsync(fieldId, src) {
+  setDefaultPathImage(fieldId, src); // 先立即更新 UI
+  try {
+    const resp = await fetch(src);
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    const filename = src.split('/').pop();
+    const file = new File([blob], filename, { type: blob.type || 'image/png' });
+    await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        _uploads[fieldId] = { file, dataUrl, name: filename };
+        // 更新 hidden input 為 data URL，讓 generateHTML() 嵌入 data URL
+        // ZIP 匯出時會自動以 _uploadZipPaths 換算成相對路徑
+        const hiddenEl = document.getElementById(fieldId);
+        if (hiddenEl) hiddenEl.value = dataUrl;
+        const preview = document.getElementById('upreview-' + fieldId);
+        if (preview) preview.src = dataUrl;
+        resolve();
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) { /* fetch 失敗時保留路徑字串 */ }
+}
+
+async function loadDefaultShowcase() {
+  try {
+    const htmlResp = await fetch(`${DEFAULT_SHOWCASE_FOLDER}/index.html`);
+    if (!htmlResp.ok) return;
+    const htmlStr = await htmlResp.text();
+    const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+
+    const gt = (sel) => doc.querySelector(sel)?.textContent?.trim() || '';
+    const ga = (sel, attr) => doc.querySelector(sel)?.getAttribute(attr)?.trim() || '';
+    const rel = (src) => (!src || /^https?:\/\//i.test(src) || /^data:/i.test(src)) ? src : `${DEFAULT_SHOWCASE_FOLDER}/${src.replace(/^\.\//,'')}`;
+
+    // Header / Hero
+    document.getElementById('f-product-name').value = gt('.brand-title') || '籌碼K線';
+    document.getElementById('f-brand-subtitle').value = gt('.brand-subtitle') || '讓主力籌碼幫你找出值得追的股票';
+    document.getElementById('f-hero-title').value = gt('.hero-title') || '籌碼K線';
+    const heroIntro = (doc.querySelector('.hero-intro')?.innerHTML || '').replace(/<br\s*\/?>\s*/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    if (heroIntro) document.getElementById('f-hero-intro').value = heroIntro;
+    const ctaUrl = ga('.store-link', 'href');
+    if (ctaUrl) document.getElementById('f-cta-url').value = ctaUrl;
+
+    // Images - 非同步 fetch 並存入 _uploads，確保 ZIP 匯出時圖片正確打包
+    const appIcon = rel(ga('.app-icon', 'src'));
+    const heroImg = rel(ga('.hero-theme-img', 'src'));
+    const imagePromises = [];
+    if (appIcon) imagePromises.push(setShowcaseImageAsync('f-app-icon', appIcon));
+    if (heroImg) imagePromises.push(setShowcaseImageAsync('f-hero-img', heroImg));
+
+    // Highlights
+    document.getElementById('highlights-list').innerHTML = '';
+    hlCount = 0;
+    const hlTitle = gt('.highlights-title');
+    if (hlTitle) document.getElementById('f-hl-title').value = hlTitle;
+    doc.querySelectorAll('.highlights-point__body').forEach(el => {
+      const icon = el.querySelector('.highlights-point__icon')?.textContent?.trim() || '🎯';
+      const title = (el.querySelector('h3')?.textContent || '').replace(icon, '').trim();
+      const stat = el.querySelector('.highlights-stat__num')?.textContent?.trim() || '';
+      const desc = el.querySelector('.highlights-point__desc')?.textContent?.trim() || '';
+      addHighlight({ icon, title, stat, desc });
+    });
+    if (hlCount === 0) defaultHighlights.forEach(h => addHighlight(h));
+
+    // Features
+    document.getElementById('features-list').innerHTML = '';
+    featureCount = 0;
+    const featTitle = gt('.features-mobile__title') || gt('.feature__section-title');
+    if (featTitle) document.getElementById('f-feat-title').value = featTitle;
+    const cards = doc.querySelectorAll('.category');
+    cards.forEach((card, i) => {
+      const title = card.querySelector('.category__title')?.textContent?.trim() || '';
+      const desc = card.querySelector('.category__desc')?.textContent?.trim() || '';
+      addFeature({ title, desc, img: '' });
+      const img = rel(card.getAttribute('data-img') || '');
+      if (img) imagePromises.push(setShowcaseImageAsync(`feat-img-${i+1}`, img));
+    });
+    if (featureCount === 0) defaultFeatures.forEach(f => addFeature(f));
+    updateHlBtn();
+    updateAddBtn();
+
+    // Download CTA + Footer + SEO
+    document.getElementById('f-cta-eyebrow').value = gt('.download-eyebrow') || '';
+    document.getElementById('f-cta-h2').value = gt('.download-cta h2') || '';
+    document.getElementById('f-cta-sub').value = gt('.download-subheading') || '';
+    const iosSrc = rel(ga('.store-link:first-of-type img', 'src'));
+    const androidSrc = rel(ga('.store-link:nth-of-type(2) img', 'src'));
+    const qrSrc = rel(ga('.download-qr__img', 'src'));
+    if (iosSrc) imagePromises.push(setShowcaseImageAsync('f-ios-badge', iosSrc));
+    if (androidSrc) imagePromises.push(setShowcaseImageAsync('f-android-badge', androidSrc));
+    if (qrSrc) imagePromises.push(setShowcaseImageAsync('f-qrcode', qrSrc));
+
+    document.getElementById('f-company').value = (gt('.footer-company') || '').replace('版權所有 ', '') || '';
+    document.getElementById('f-address').value = (gt('.footer-address') || '').replace('聯絡地址：', '') || '';
+    document.getElementById('f-year').value = (gt('.footer-copyright')?.match(/\d{4}/)?.[0]) || document.getElementById('f-year').value;
+
+    const pageTitle = gt('title');
+    const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    if (pageTitle) document.getElementById('f-page-title').value = pageTitle;
+    if (metaDesc) document.getElementById('f-meta-desc').value = metaDesc;
+
+    // Colors from showcase styles.css
+    const cssResp = await fetch(`${DEFAULT_SHOWCASE_FOLDER}/styles.css`);
+    if (cssResp.ok) {
+      const cssText = await cssResp.text();
+      const p = getLastCssVarHex(cssText, 'primary');
+      const a = getLastCssVarHex(cssText, 'accent');
+      if (p) {
+        document.getElementById('f-color-primary').value = p;
+        document.getElementById('f-color-primary-hex').value = p;
+      }
+      if (a) {
+        document.getElementById('f-color-accent').value = a;
+        document.getElementById('f-color-accent-hex').value = a;
+      }
+    }
+
+    // 等所有圖片都 fetch 完成後再重新產生預覽（確保 ZIP 也能正確使用 data URL）
+    await Promise.all(imagePromises);
+    refreshSEOCountOnly();
+    previewPage();
+    showToast('✓ 已載入參考範例');
+  } catch (e) {
+    // 無預設展示資料夾時，維持既有預設
+  }
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ============================================================
+   Init
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // 初始狀態：空白（一筆空白亮點 + 一筆空白功能），不自動載入展示
+  // 如需載入範例請點頂部「💾 參考 demo」
+  addHighlight({});
+  addFeature({});
+
+  // ── 預設配色方案 ──
+
+
+  // SEO 欄位：動態帶入預設值（可直接修改）+ 字元計數
+  // _seoAutoTitle / _seoAutoDesc 記錄上次自動填入的值，用來判斷是否已被手動改過
+  let _seoAutoTitle = '';
+  let _seoAutoDesc  = '';
+
+  function getSEODefaults() {
+    const name  = (document.getElementById('f-product-name')?.value || '').trim();
+    const sub   = (document.getElementById('f-brand-subtitle')?.value || '').trim();
+    const intro = (document.getElementById('f-hero-intro')?.value || '').trim();
+    return {
+      title: name && sub ? `${name}｜${sub}` : name || sub,
+      desc:  intro,
+    };
+  }
+
+  function updateSEOValues(force = false) {
+    const d = getSEODefaults();
+    const titleEl = document.getElementById('f-page-title');
+    const descEl  = document.getElementById('f-meta-desc');
+
+    // 只有在「空白」或「仍是上次自動值」時才自動更新 value
+    if (titleEl) {
+      const cur = titleEl.value;
+      if (force || cur === '' || cur === _seoAutoTitle) {
+        titleEl.value = d.title;
+        _seoAutoTitle = d.title;
+      }
+      titleEl.placeholder = d.title || '產品名稱｜品牌副標題';
+    }
+    if (descEl) {
+      const cur = descEl.value;
+      if (force || cur === '' || cur === _seoAutoDesc) {
+        descEl.value = d.desc;
+        _seoAutoDesc = d.desc;
+      }
+      descEl.placeholder = d.desc || '簡短描述此頁面內容';
+    }
+    updateSEOCount();
+  }
+
+  function updateSEOCount() {
+    const titleEl    = document.getElementById('f-page-title');
+    const descEl     = document.getElementById('f-meta-desc');
+    const titleCount = document.getElementById('seo-title-count');
+    const descCount  = document.getElementById('seo-desc-count');
+    if (titleCount) {
+      const len = titleEl?.value.length || 0;
+      titleCount.textContent = `${len} 字元（建議20字元內）`;
+      titleCount.style.color = len > 20 ? '#dc2626' : 'var(--text-lighter)';
+    }
+    if (descCount) {
+      const len = descEl?.value.length || 0;
+      descCount.textContent = `${len} 字元（建議150字元內）`;
+      descCount.style.color = len > 150 ? '#dc2626' : 'var(--text-lighter)';
+    }
+  }
+
+  // 來源欄位變動 → 自動更新 SEO value（若使用者未手動改過）
+  ['f-product-name','f-brand-subtitle','f-hero-intro'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => updateSEOValues());
+  });
+  // SEO 欄位自己輸入 → 只更新計數
+  document.getElementById('f-page-title')?.addEventListener('input', updateSEOCount);
+  document.getElementById('f-meta-desc')?.addEventListener('input', updateSEOCount);
+
+  // 初始化：強制帶入預設值
+  updateSEOValues(true);
+
+  // 顏色變更時：若預覽已開啟，立即重繪，避免誤判「只有預覽是舊色」
+  ['f-color-primary','f-color-primary-hex','f-color-accent','f-color-accent-hex'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', refreshPreviewIfVisible);
+    document.getElementById(id)?.addEventListener('change', refreshPreviewIfVisible);
+  });
+  // 不自動載入展示，保持空白初始狀態
+});
+</script>
+</body>
+</html>

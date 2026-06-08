@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Landing Page 產生器｜網頁規格書</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --primary: #2e5283; --primary-dark: #1f3b63; --accent: #9b8400;
+      --bg: #f3f4f6; --card: #fff; --border: #e0e4ea;
+      --text: #1a1f2b; --text-soft: #5a636f; --radius: 10px;
+    }
+    body { margin: 0; font-family: "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.7; }
+    .header { background: var(--primary); color: #fff; padding: 32px 48px; }
+    .header h1 { margin: 0 0 6px; font-size: 24px; }
+    .header p { margin: 0; opacity: 0.8; font-size: 13px; }
+    .badge { display: inline-block; background: rgba(255,255,255,0.15); border-radius: 999px; padding: 2px 10px; font-size: 11px; margin-left: 10px; vertical-align: middle; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 48px; }
+    h2 { font-size: 18px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 12px; margin: 40px 0 16px; }
+    h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; color: var(--text); }
+    p { margin: 0 0 12px; color: var(--text-soft); }
+    section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f0f4fb; color: var(--primary); font-weight: 700; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+    .tag { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700; margin-right: 4px; }
+    .tag-desktop { background: #e8eef8; color: var(--primary); }
+    .tag-mobile  { background: #fef3c7; color: #92400e; }
+    .tag-both    { background: #d1fae5; color: #065f46; }
+    .tag-preview { background: #ede9fe; color: #5b21b6; }
+    .tag-zip     { background: #fee2e2; color: #991b1b; }
+    code { background: #f0f4fb; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; color: var(--primary); }
+    ul { margin: 0 0 12px; padding-left: 20px; color: var(--text-soft); }
+    li { margin-bottom: 4px; }
+    .flow-box { display: flex; gap: 0; align-items: stretch; flex-wrap: wrap; margin: 8px 0; }
+    .flow-step { background: #f0f4fb; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; flex: 1; min-width: 120px; }
+    .flow-arrow { display: flex; align-items: center; padding: 0 6px; color: #9aa2ae; font-size: 18px; }
+    .note { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #92400e; margin-top: 12px; }
+    .footer { text-align: center; padding: 32px; color: #9aa2ae; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛠 Landing Page 產生器 <span class="badge">網頁規格書 v1.0</span></h1>
+  <p>文件日期：2026-06-05 ／ 專案：CMoney Landing Page Generator</p>
+</div>
+
+<div class="container">
+
+  <!-- 1. 產品概述 -->
+  <h2>1. 產品概述</h2>
+  <section>
+    <p>Landing Page 產生器是一個單頁工具（<code>index.html</code>），左側為表單設定區，右側為即時預覽區。使用者填寫產品資訊後，可預覽完整 Landing Page，並一鍵下載包含 HTML、CSS 與圖片素材的完整打包檔案。</p>
+    <table>
+      <tr><th>項目</th><th>說明</th></tr>
+      <tr><td>框架</td><td>純 HTML / CSS / JavaScript（無框架依賴）</td></tr>
+      <tr><td>外部依賴</td><td>Google Fonts（Noto Sans TC / Noto Serif TC）、JSZip 3.10.1（CDN）</td></tr>
+      <tr><td>佈局</td><td>雙欄 Grid：左欄 480px（工具面板）＋ 右欄 1fr（預覽區）</td></tr>
+      <tr><td>RWD 臨界點</td><td>≤ 959px：隱藏預覽區，僅顯示工具面板</td></tr>
+    </table>
+  </section>
+
+  <!-- 2. 頂部列規格 -->
+  <h2>2. 頂部列（Topbar）</h2>
+  <section>
+    <table>
+      <tr><th>區塊</th><th>內容</th><th>說明</th></tr>
+      <tr><td>左欄（480px）</td><td>🛠 Landing Page 產生器</td><td>深藍底 <code>#2e5283</code>，白字，固定置頂</td></tr>
+      <tr><td>右欄（1fr）</td><td>「預覽畫面」文字 ＋ 桌機／手機切換按鈕</td><td>深灰底 <code>#2d3240</code>，與預覽面板對齊</td></tr>
+    </table>
+    <h3>裝置切換按鈕</h3>
+    <table>
+      <tr><th>按鈕</th><th>行為</th></tr>
+      <tr><td><span class="tag tag-desktop">桌機</span></td><td>iframe 改為 <code>mode-desktop</code>，寬度 100%；同時透過 <code>postMessage</code> 通知 iframe 切換為 desktop 模式</td></tr>
+      <tr><td><span class="tag tag-mobile">手機</span></td><td>iframe 改為 <code>mode-mobile</code>，寬度固定 375px 置中，左右 padding 16px；同時透過 <code>postMessage</code> 通知 iframe 切換為 mobile 模式</td></tr>
+    </table>
+  </section>
+
+  <!-- 3. 工具面板 -->
+  <h2>3. 工具面板（左欄）</h2>
+  <section>
+    <p>共分六個可折疊區塊（Accordion），每區塊含數個欄位。底部 sticky action bar 提供「預覽頁面」與「下載打包」按鈕。</p>
+    <table>
+      <tr><th>#</th><th>區塊名稱</th><th>主要欄位</th></tr>
+      <tr><td>1</td><td>基本設定</td><td>產品名稱、品牌副標題、App Icon URL、頁面 &lt;title&gt;（SEO）、Meta description（SEO）</td></tr>
+      <tr><td>2</td><td>Hero 主視覺</td><td>Hero 主標題、Hero 介紹文字、主要下載連結（CTA URL）、Hero 圖片 URL</td></tr>
+      <tr><td>3</td><td>Why 亮點區塊</td><td>區塊標題、最多 6 個亮點（Icon / 標題 / 說明）</td></tr>
+      <tr><td>4</td><td>特色功能</td><td>區塊標題、最多 6 個功能卡片（標題 / 說明 / 截圖 URL）</td></tr>
+      <tr><td>5</td><td>下載 CTA</td><td>Eyebrow 標籤、H2 標題、副標題、iOS 徽章 URL、Android 徽章 URL、QR Code URL</td></tr>
+      <tr><td>6</td><td>頁尾資訊</td><td>公司名稱、聯絡地址、版權年份</td></tr>
+    </table>
+  </section>
+
+  <!-- 3b. SEO 設定 -->
+  <h2>3b. SEO 設定欄位</h2>
+  <section>
+    <p>以下欄位寫入產生頁面的 <code>&lt;head&gt;</code>，不顯示於畫面上，用途為搜尋引擎優化（SEO）。</p>
+    <table>
+      <tr><th>欄位</th><th>對應 HTML</th><th>顯示位置</th><th>預設值</th></tr>
+      <tr>
+        <td>頁面 <code>&lt;title&gt;</code></td>
+        <td><code>&lt;title&gt;...&lt;/title&gt;</code></td>
+        <td>瀏覽器分頁標題列、Google 搜尋結果藍色標題</td>
+        <td>留空時自動使用「產品名稱｜品牌副標題」</td>
+      </tr>
+      <tr>
+        <td>Meta description</td>
+        <td><code>&lt;meta name="description" content="..."&gt;</code></td>
+        <td>Google 搜尋結果摘要文字（建議 100–160 字元）</td>
+        <td>留空時自動使用 Hero 介紹文字</td>
+      </tr>
+    </table>
+    <div class="note">⚠️ 這兩個欄位在頁面畫面上完全看不到，但對 Google 搜尋排名與點擊率有直接影響，建議填寫。</div>
+  </section>
+
+  <!-- 4. 預覽面板 -->
+  <h2>4. 預覽面板（右欄）</h2>
+  <section>
+    <h3>預覽流程</h3>
+    <div class="flow-box">
+      <div class="flow-step">1. 點擊「預覽頁面」</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">2. <code>generateHTML()</code> 產生完整 HTML 字串</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">3. 相對路徑（<code>assets/...</code>）轉為絕對路徑</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">4. Blob URL 注入 iframe</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">5. <code>postMessage</code> 傳送目前裝置模式</div>
+    </div>
+    <div class="note">⚠️ 路徑絕對化僅用於預覽；下載的 <code>index.html</code> 保留原始相對路徑，確保打包後可直接運行。</div>
+
+    <h3>iframe 模式</h3>
+    <table>
+      <tr><th>模式</th><th>CSS class</th><th>iframe 寬度</th></tr>
+      <tr><td><span class="tag tag-desktop">桌機</span></td><td><code>mode-desktop</code></td><td>100%（填滿預覽區）</td></tr>
+      <tr><td><span class="tag tag-mobile">手機</span></td><td><code>mode-mobile</code></td><td>375px，置中，圓角陰影</td></tr>
+    </table>
+  </section>
+
+  <!-- 5. CTA 按鈕行為規格 -->
+  <h2>5. CTA 按鈕行為規格</h2>
+  <section>
+    <p>Landing Page 中所有「免費下載」、「立即免費下載」按鈕均呼叫同一個 <code>handleDownload()</code> 函式，行為依情境判斷如下：</p>
+
+    <h3>判斷邏輯</h3>
+    <div class="flow-box">
+      <div class="flow-step" style="background:#e8eef8;">判斷是否在 iframe 預覽中<br><code>window.parent !== window</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#ede9fe;">預覽中：使用 <code>_previewMode</code><br>（由 parent 透過 postMessage 傳入）</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#f0f4fb;">非預覽（下載檔）：<br>UA + 視窗寬度偵測</div>
+    </div>
+
+    <table style="margin-top:16px;">
+      <tr><th>情境</th><th>判斷依據</th><th>行為</th></tr>
+      <tr>
+        <td><span class="tag tag-desktop">桌機</span> 預覽模式</td>
+        <td>切換按鈕為「桌機」</td>
+        <td>彈出 QR Code Modal（背景模糊，點 × / Esc / 背景關閉）</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-mobile">手機</span> 預覽模式</td>
+        <td>切換按鈕為「手機」</td>
+        <td>平滑捲動至 <code>#download</code> 下載區塊</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-desktop">桌機</span> 實際瀏覽器</td>
+        <td>視窗 ≥ 1024px 且非行動裝置 UA</td>
+        <td>彈出 QR Code Modal</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-mobile">手機</span> 實際瀏覽器</td>
+        <td>視窗 < 1024px 或行動裝置 UA</td>
+        <td>平滑捲動至 <code>#download</code> 下載區塊</td>
+      </tr>
+      <tr>
+        <td>無 QR Code 圖片</td>
+        <td>表單未填 QR Code URL</td>
+        <td>兩種情境均 fallback 捲動至 <code>#download</code></td>
+      </tr>
+    </table>
+
+    <h3>QR Code Modal 規格</h3>
+    <ul>
+      <li>固定定位，全版背景遮罩 <code>rgba(0,0,0,0.55)</code> + backdrop-filter blur</li>
+      <li>白底圓角卡片（border-radius: 20px），置中顯示</li>
+      <li>QR Code 圖片尺寸 220×220px</li>
+      <li>關閉方式：右上角 × 按鈕 / 點擊背景遮罩 / 鍵盤 Esc</li>
+    </ul>
+  </section>
+
+  <!-- 6. 下載打包規格 -->
+  <h2>6. 下載打包規格</h2>
+  <section>
+    <h3>ZIP 結構</h3>
+    <table>
+      <tr><th>路徑</th><th>說明</th></tr>
+      <tr><td><code>LandingPage_[產品名稱].zip</code></td><td>ZIP 根目錄（產品名稱中非字元符號自動移除）</td></tr>
+      <tr><td><code>LandingPage_[產品名稱]/index.html</code></td><td>Landing Page 主檔，CSS 改為外部引用 <code>&lt;link rel="stylesheet" href="styles.css" /&gt;</code></td></tr>
+      <tr><td><code>LandingPage_[產品名稱]/styles.css</code></td><td>完整樣式表（從 EMBEDDED_CSS 提取）</td></tr>
+      <tr><td><code>LandingPage_[產品名稱]/assets/images/*</code></td><td>所有表單中填入的本地圖片（路徑以 <code>assets/</code> 開頭）</td></tr>
+    </table>
+    <div class="note">⚠️ 外部 URL 圖片（https://...）不納入打包，保留原始 URL 引用。如本地資源不存在（fetch 失敗），該圖片靜默跳過不影響下載。</div>
+
+    <h3>打包流程</h3>
+    <div class="flow-box">
+      <div class="flow-step">1. 呼叫 <code>generateHTML()</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">2. 移除 <code>&lt;style&gt;</code> 區塊<br>改插入 <code>&lt;link href="styles.css"&gt;</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">3. 掃描表單所有 input[type=url]<br>收集 <code>assets/</code> 開頭路徑</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">4. fetch 各圖片並加入 ZIP</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">5. JSZip 產生 Blob<br>觸發下載</div>
+    </div>
+  </section>
+
+  <!-- 7. Landing Page 頁面結構 -->
+  <h2>7. Landing Page 頁面結構</h2>
+  <section>
+    <table>
+      <tr><th>#</th><th>區塊</th><th>ID / Class</th><th>說明</th></tr>
+      <tr><td>1</td><td>Header</td><td><code>.site-header</code></td><td>固定置頂，含品牌 Logo、「特色功能」、「免費下載」按鈕</td></tr>
+      <tr><td>2</td><td>Hero</td><td><code>.hero</code></td><td>主標題、介紹文字、「立即免費下載」＋「看功能介紹」CTA、主題圖</td></tr>
+      <tr><td>3</td><td>Why 亮點</td><td><code>.highlights</code></td><td>最多 6 個亮點卡片</td></tr>
+      <tr><td>4</td><td>特色功能</td><td><code>#features</code> / <code>.features</code></td><td>桌機版：左列點選 + 右側圖片預覽；手機版：Swipe Slider</td></tr>
+      <tr><td>5</td><td>下載 CTA</td><td><code>#download</code> / <code>.download-cta</code></td><td>iOS / Android 徽章連結、QR Code（手機版隱藏 QR Code）</td></tr>
+      <tr><td>6</td><td>Footer</td><td><code>.site-footer</code></td><td>品牌、公司資訊、版權聲明</td></tr>
+    </table>
+  </section>
+
+  <!-- 8. RWD 斷點 -->
+  <h2>8. RWD 斷點（Landing Page）</h2>
+  <section>
+    <table>
+      <tr><th>斷點</th><th>對應行為</th></tr>
+      <tr><td><code>≤ 480px</code></td><td>Hero 標題縮小、CTA 間距收窄、頁尾垂直排列</td></tr>
+      <tr><td><code>≤ 640px</code></td><td>小手機細項排版調整</td></tr>
+      <tr><td><code>≤ 768px</code></td><td>下載區改為垂直排列、隱藏 QR Code</td></tr>
+      <tr><td><code>≤ 1023px</code></td><td>特色功能切換為手機 Slider、隱藏 Phone Frame 裝飾</td></tr>
+      <tr><td><code>≥ 1024px</code></td><td>特色功能顯示桌機 Grid（左列選單 + 右側截圖）</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<div class="footer">
+  Landing Page 產生器 網頁規格書 v1.0 ／ CMoney ／ 2026-06-05
+</div>
+
+</body>
+</html>

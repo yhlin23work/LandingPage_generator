@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>籌碼K線｜讓主力籌碼幫你找出值得追的股票</title>
+    <meta name="description" content="全台最完整的股市籌碼監測工具！
+每日盤後揭露三大法人、主力券商、大戶散戶的真實動向，帶你提前掌握布局脈絡，降低資訊落差與高檔追價風險。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- ========== Header ========== -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="#top">
+          <img class="app-icon" src="assets/images/app-icon.png" alt="籌碼K線" width="56" height="56" />
+          <div class="brand-content">
+            <strong class="brand-title">籌碼K線</strong>
+            <span class="brand-subtitle">讓主力籌碼幫你找出值得追的股票</span>
+          </div>
+        </a>
+        <div class="header-ctas">
+          <a href="#features" class="header-nav-btn header-nav-btn--ghost">特色功能</a>
+          <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">免費下載</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- ========== Hero ========== -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-body">
+            <div class="hero-text">
+              <h1 class="hero-title">籌碼K線</h1>
+              <div class="hero-content">
+                <p class="hero-intro">全台最完整的股市籌碼監測工具！<br>
+每日盤後揭露三大法人、主力券商、大戶散戶的真實動向，帶你提前掌握布局脈絡，降低資訊落差與高檔追價風險。</p>
+                <div class="hero-ctas">
+                  <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">立即免費下載</button>
+                  <a href="#features" class="header-nav-btn header-nav-btn--ghost">看功能介紹</a>
+                </div>
+              </div>
+            </div>
+            <div class="hero-visual">
+              <img src="assets/images/hero.png" alt="籌碼K線 主題圖" class="hero-theme-img" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== Highlights ========== -->
+      <section class="highlights">
+        <div class="container">
+          <div class="highlights-header">
+            <h2 class="highlights-title">Why 籌碼K線 ?</h2>
+          </div>
+          <div class="highlights-points" data-count="1">
+            
+            
+            <div class="highlights-point">
+              <div class="highlights-point__body">
+                <h3><span class="highlights-point__icon">🔍</span>籌碼不說謊，數據替你選股</h3>
+                <div class="highlights-perf">
+                  <div class="highlights-perf__main">
+                    <span class="highlights-stat__num">盤面指標 勝過感覺與消息</span>
+                  </div>
+                </div>
+                <p class="highlights-point__desc">20+ 種籌碼指標每日更新，三大法人、主力券商進出一覽無遺，讓你的每一筆交易都有所依據</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== Features ========== -->
+      <section id="features" class="features">
+
+        <!-- Desktop & Tablet -->
+        <div class="feature__container feature__container--reverse">
+          <div class="feature__head">
+            <h2 class="section-title feature__section-title">六大功能，輕鬆掌握籌碼動向</h2>
+            <div class="feature__content">
+              <div class="cols cols-xs">
+
+                <!-- 功能 1 -->
+                <div class="col col-4">
+                  <div class="category category-guide" data-index="0" data-img="assets/images/features/feat1.png">
+                    <h3 class="category__title">盤中即時籌碼</h3>
+                    <p class="category__desc">追蹤大戶與散戶即時買賣超，強化盤中進出決策效率</p>
+                  </div>
+                </div>
+
+                <!-- 功能 2 -->
+                <div class="col col-4">
+                  <div class="category category-holding" data-index="1" data-img="assets/images/features/feat2.png">
+                    <h3 class="category__title">籌碼日報</h3>
+                    <p class="category__desc">每日盤後整合三大法人+主力+八大行庫完整買賣報告</p>
+                  </div>
+                </div>
+
+                <!-- 功能 3 -->
+                <div class="col col-4">
+                  <div class="category category-list" data-index="2" data-img="assets/images/features/feat3.png">
+                    <h3 class="category__title">籌碼條件選股</h3>
+                    <p class="category__desc">篩選法人持續加碼、主力集中佈局的強勢股票</p>
+                  </div>
+                </div>
+
+                <!-- 功能 4 -->
+                <div class="col col-4">
+                  <div class="category category-report" data-index="3" data-img="assets/images/features/feat4.png">
+                    <h3 class="category__title">分點進出追蹤</h3>
+                    <p class="category__desc">揭露神秘大戶慣用券商動向，掌握主力成本與佈局節奏</p>
+                  </div>
+                </div>
+
+                <!-- 功能 5 -->
+                <div class="col col-4">
+                  <div class="category category-premium" data-index="4" data-img="assets/images/features/feat5.png">
+                    <h3 class="category__title">庫存股每日健檢</h3>
+                    <p class="category__desc">診斷個股盤後籌碼結構，辨識主力加碼或出貨訊號</p>
+                  </div>
+                </div>
+
+                <!-- 功能 6 -->
+                <div class="col col-4">
+                  <div class="category category-forum" data-index="5" data-img="assets/images/features/feat6.png">
+                    <h3 class="category__title">基本面整合比對</h3>
+                    <p class="category__desc">匯整營收表現與籌碼交叉驗證降低判斷盲點</p>
+                  </div>
+                </div>
+              </div>
+              <p class="feature__hint">✦ 點擊上方功能卡片可切換預覽畫面</p>
+            </div>
+          </div>
+          <figure class="feature__foot">
+            <div class="phone-mockup">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <img class="feature__img" id="feature-preview-img" src="assets/images/features/feat1.png" alt="功能示意圖">
+              </div>
+              <div class="phone-mockup__indicator"></div>
+            </div>
+          </figure>
+        </div>
+
+        <!-- Mobile Slider -->
+        <div class="features-mobile">
+          <h2 class="features-mobile__title">六大功能，輕鬆掌握籌碼動向</h2>
+          <div class="features-overview">
+            <div class="features-overview__grid">
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">1</span>
+        <div>
+          <h4>盤中即時籌碼</h4>
+          <p>追蹤大戶與散戶即時買賣超，強化盤中進出決策效率</p>
+        </div>
+      </div>
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">2</span>
+        <div>
+          <h4>籌碼日報</h4>
+          <p>每日盤後整合三大法人+主力+八大行庫完整買賣報告</p>
+        </div>
+      </div>
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">3</span>
+        <div>
+          <h4>籌碼條件選股</h4>
+          <p>篩選法人持續加碼、主力集中佈局的強勢股票</p>
+        </div>
+      </div>
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">4</span>
+        <div>
+          <h4>分點進出追蹤</h4>
+          <p>揭露神秘大戶慣用券商動向，掌握主力成本與佈局節奏</p>
+        </div>
+      </div>
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">5</span>
+        <div>
+          <h4>庫存股每日健檢</h4>
+          <p>診斷個股盤後籌碼結構，辨識主力加碼或出貨訊號</p>
+        </div>
+      </div>
+
+      <div class="features-overview__item">
+        <span class="features-overview__num">6</span>
+        <div>
+          <h4>基本面整合比對</h4>
+          <p>匯整營收表現與籌碼交叉驗證降低判斷盲點</p>
+        </div>
+      </div>
+            </div>
+          </div>
+          <div class="features-slider-section">
+            <div class="features-slider-label">功能詳細圖覧</div>
+            <div class="features-slider">
+
+    <div class="feature-card">
+      <h3>盤中即時籌碼</h3>
+      <p>追蹤大戶與散戶即時買賣超，強化盤中進出決策效率</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat1.png" alt="盤中即時籌碼" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+
+    <div class="feature-card">
+      <h3>籌碼日報</h3>
+      <p>每日盤後整合三大法人+主力+八大行庫完整買賣報告</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat2.png" alt="籌碼日報" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+
+    <div class="feature-card">
+      <h3>籌碼條件選股</h3>
+      <p>篩選法人持續加碼、主力集中佈局的強勢股票</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat3.png" alt="籌碼條件選股" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+
+    <div class="feature-card">
+      <h3>分點進出追蹤</h3>
+      <p>揭露神秘大戶慣用券商動向，掌握主力成本與佈局節奏</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat4.png" alt="分點進出追蹤" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+
+    <div class="feature-card">
+      <h3>庫存股每日健檢</h3>
+      <p>診斷個股盤後籌碼結構，辨識主力加碼或出貨訊號</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat5.png" alt="庫存股每日健檢" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+
+    <div class="feature-card">
+      <h3>基本面整合比對</h3>
+      <p>匯整營收表現與籌碼交叉驗證降低判斷盲點</p>
+      <div class="phone-mockup phone-mockup--sm"><div class="phone-mockup__notch"></div><div class="phone-mockup__screen"><img src="assets/images/features/feat6.png" alt="基本面整合比對" /></div><div class="phone-mockup__indicator"></div></div>
+    </div>
+            </div>
+            <div class="slider-arrows">
+              <button class="slider-arrow slider-arrow--prev" aria-label="上一張">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button class="slider-arrow slider-arrow--next" aria-label="下一張">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="slider-dots"></div>
+        </div>
+
+      </section>
+
+      <!-- ========== Download CTA ========== -->
+      <section id="download" class="download-cta">
+        <div class="container">
+          <div class="download-inner">
+            <div class="download-text">
+              <p class="download-eyebrow">⚡ 現在就加入 ⚡</p>
+              <h2>立即下載 掌握籌碼先機</h2>
+              <p class="download-subheading">每日揭露主力真實動向，跟著法人資金共識一起佈局</p>
+              <div class="download-badges">
+                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link"><img src="assets/images/SharedImages/appstore-badge.png" alt="下載 iOS" class="store-badge-large" /></a>
+                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link"><img src="assets/images/SharedImages/play-badge.png" alt="下載 Android" class="store-badge-large" /></a>
+              </div>
+            </div>
+            <div class="download-qr"><img src="assets/images/qrcode.png" alt="掃描 QR Code 下載" class="download-qr__img" /></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========== Footer ========== -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <img src="assets/images/app-icon.png" alt="籌碼K線" class="footer-icon" />
+            <h3>籌碼K線</h3>
+          </div>
+          <div class="footer-bottom">
+            <p class="footer-company">版權所有 CMoney 全曜財經資訊股份有限公司</p>
+            <p class="footer-address">聯絡地址：新北市板橋區文化路一段 268 號 12 樓之 2</p>
+            <p class="footer-copyright">Copyright &copy; 2026 CMoney Corporation. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- QR Code Modal -->
+    
+    <div id="qr-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeQrModal()">
+      <div style="background:#fff;border-radius:20px;padding:24px 28px;text-align:center;max-width:320px;width:90%;position:relative;box-shadow:0 24px 64px rgba(0,0,0,0.3);">
+        <button onclick="closeQrModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">&times;</button>
+        <img src="assets/images/SharedImages/cellphone_downloadCTA.png" alt="手機掃描下載" style="width:100%;max-width:240px;height:auto;display:block;margin:0 auto 16px;" />
+        <img src="assets/images/qrcode.png" alt="掃描 QR Code 下載" style="width:220px;height:220px;object-fit:contain;border-radius:8px;" />
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        function initDesktopFeatures() {
+          const categories = document.querySelectorAll('.category');
+          const previewImg = document.getElementById('feature-preview-img');
+          if (!categories.length || !previewImg) return;
+          let currentIndex = 0;
+          function updateActive(index) {
+            categories.forEach((cat, i) => cat.classList.toggle('active', i === index));
+            const newImgSrc = categories[index].getAttribute('data-img');
+            if (newImgSrc) previewImg.src = newImgSrc;
+          }
+          categories.forEach((cat, i) => cat.addEventListener('click', () => { currentIndex = i; updateActive(i); }));
+          updateActive(0);
+        }
+
+        function initMobileSlider() {
+          const wrapper = document.querySelector('.features-mobile');
+          const slider = document.querySelector('.features-slider');
+          const dotsContainer = document.querySelector('.features-mobile .slider-dots');
+          if (!slider || !wrapper) return;
+          const origCards = Array.from(slider.querySelectorAll('.feature-card'));
+          const total = origCards.length;
+          let currentSlide = 1;
+          let startX = 0;
+          let isDragging = false;
+          origCards.forEach((card, i) => {
+            const h3 = card.querySelector('h3');
+            if (h3 && !h3.querySelector('.card-num')) {
+              const num = document.createElement('span');
+              num.className = 'card-num';
+              num.textContent = i + 1;
+              h3.insertBefore(num, h3.firstChild);
+            }
+          });
+          const firstClone = origCards[0].cloneNode(true);
+          const lastClone = origCards[total - 1].cloneNode(true);
+          firstClone.setAttribute('aria-hidden', 'true');
+          lastClone.setAttribute('aria-hidden', 'true');
+          slider.appendChild(firstClone);
+          slider.insertBefore(lastClone, origCards[0]);
+          const allCards = Array.from(slider.querySelectorAll('.feature-card'));
+          function setCardWidths() {
+            const w = wrapper.offsetWidth;
+            allCards.forEach(card => { card.style.width = w + 'px'; });
+            return w;
+          }
+          function getCardWidth() { return wrapper.offsetWidth; }
+          origCards.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.className = 'slider-dot';
+            if (index === 0) dot.classList.add('active');
+            dot.setAttribute('aria-label', '切換到第 ' + (index + 1) + ' 個功能');
+            dot.addEventListener('click', () => goToSlide(index + 1));
+            dotsContainer && dotsContainer.appendChild(dot);
+          });
+          const dots = Array.from(dotsContainer ? dotsContainer.querySelectorAll('.slider-dot') : []);
+          function updateDots(index) {
+            const dotIndex = ((index - 1) % total + total) % total;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === dotIndex));
+          }
+          function jumpTo(index) {
+            slider.style.transition = 'none';
+            slider.style.transform = 'translateX(-' + (index * getCardWidth()) + 'px)';
+            currentSlide = index;
+          }
+          function goToSlide(index) {
+            currentSlide = index;
+            slider.style.transition = 'transform 0.35s ease';
+            slider.style.transform = 'translateX(-' + (index * getCardWidth()) + 'px)';
+            updateDots(index);
+          }
+          slider.addEventListener('transitionend', () => {
+            if (currentSlide === 0) { jumpTo(total); updateDots(total); }
+            else if (currentSlide === total + 1) { jumpTo(1); updateDots(1); }
+          });
+          const prevBtn = wrapper.querySelector('.slider-arrow--prev');
+          const nextBtn = wrapper.querySelector('.slider-arrow--next');
+          if (prevBtn) prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+          if (nextBtn) nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+          wrapper.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; isDragging = true; slider.style.transition = 'none'; }, { passive: true });
+          wrapper.addEventListener('touchmove', (e) => { if (!isDragging) return; const diff = e.touches[0].clientX - startX; slider.style.transform = 'translateX(' + (-(currentSlide * getCardWidth()) + diff) + 'px)'; }, { passive: true });
+          wrapper.addEventListener('touchend', (e) => { if (!isDragging) return; isDragging = false; const diff = e.changedTouches[0].clientX - startX; const threshold = getCardWidth() * 0.25; if (diff < -threshold) goToSlide(currentSlide + 1); else if (diff > threshold) goToSlide(currentSlide - 1); else goToSlide(currentSlide); });
+          window.addEventListener('resize', () => { setCardWidths(); jumpTo(currentSlide); });
+          setCardWidths(); jumpTo(1); updateDots(1);
+        }
+
+        initDesktopFeatures();
+        initMobileSlider();
+
+        // 下載按鈕行為：預覽模式由 parent postMessage 注入，下載檔則用 UA 偵測
+        // iframe 環境中預設 desktop，避免 postMessage 時序問題導致漏判
+        var _previewMode = (window.parent !== window) ? 'desktop' : null;
+        if (window.parent !== window) {
+          window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'setPreviewMode') {
+              _previewMode = e.data.mode;
+            }
+          });
+        }
+        window.handleDownload = function() {
+          var useDesktop;
+          if (_previewMode !== null) {
+            useDesktop = _previewMode === 'desktop';
+          } else {
+            useDesktop = window.innerWidth >= 1024 && !/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+          }
+          if (useDesktop) {
+            var modal = document.getElementById('qr-modal');
+            if (modal) { modal.style.display = 'flex'; }
+            else { var el = document.getElementById('download'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }
+          } else {
+            var el2 = document.getElementById('download');
+            if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+          }
+        };
+        window.closeQrModal = function() {
+          var modal = document.getElementById('qr-modal');
+          if (modal) modal.style.display = 'none';
+        };
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') window.closeQrModal && window.closeQrModal();
+        });
+      })();
+    </script>
+  </body>
+</html>
