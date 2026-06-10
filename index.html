@@ -281,6 +281,19 @@
       height: 38px;
     }
     .topbar-demo-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+    .topbar-demo-wrap { position: relative; display: inline-flex; }
+    .showcase-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 1000;
+      min-width: 160px; background: #fff; border: 1px solid #e2e6ee; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 4px; overflow: hidden;
+    }
+    .showcase-dropdown.open { display: block; }
+    .showcase-dropdown__item {
+      display: block; width: 100%; text-align: left; padding: 9px 12px; border: none;
+      background: none; font-size: 13px; font-weight: 600; color: #2b3445; cursor: pointer;
+      border-radius: 6px; font-family: inherit; white-space: nowrap;
+    }
+    .showcase-dropdown__item:hover { background: #eef2fb; color: var(--primary); }
     .topbar-btns { display: flex; gap: 4px; align-items: center; }
     body.app-collapsed .topbar-import-btn,
     body.app-collapsed .topbar-demo-btn { display: none !important; }
@@ -312,6 +325,10 @@
     .form-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
     .form-tab-content { display: none; flex: 1; overflow-y: auto; }
     .form-tab-content.active { display: flex; flex-direction: column; }
+    .seo-section-title {
+      margin: 0; font-size: 14px; font-weight: 700; color: var(--primary);
+      padding-bottom: 6px; border-bottom: 2px solid var(--border);
+    }
     .action-bar {
       position: sticky; bottom: 0; left: 0; right: 0;
       background: var(--card); border-top: 1px solid var(--border);
@@ -342,7 +359,13 @@
         匯入
         <input type="file" accept=".zip" style="display:none" onchange="importZIP(this)">
       </label>
-      <button class="topbar-demo-btn" onclick="loadDefaultShowcase()" title="載入籌K設定值參考">範例</button>
+      <div class="topbar-demo-wrap">
+        <button class="topbar-demo-btn" onclick="toggleShowcaseChooser(event)" title="載入範例設定值參考">範例</button>
+        <div id="showcase-dropdown" class="showcase-dropdown">
+          <button class="showcase-dropdown__item" onclick="chooseShowcase('chipk')">籌K（chipk）</button>
+          <button class="showcase-dropdown__item" onclick="chooseShowcase('supertrendk')">起K（supertrendk）</button>
+        </div>
+      </div>
       <button id="btn-toggle-panel" class="collapse-btn" onclick="toggleFormPanel()" title="收起側欄，預覽完整的桌機版畫面" aria-label="收起側欄">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l-5 5 5 5"/></svg>
       </button>
@@ -611,22 +634,23 @@
     <!-- SEO 分頁 -->
     <div class="form-tab-content" id="tab-seo">
       <div class="form-inner" style="gap:16px;">
+        <h3 class="seo-section-title">SEO</h3>
         <div class="field">
-          <label>頁面 &lt;title&gt;</label>
-          <input type="text" id="f-page-title" placeholder="例：產品名稱 | 副標Slogan" />
-          <div style="display:flex;justify-content:flex-end;align-items:center;">
-            <span id="seo-title-count" style="font-size:11px;color:var(--text-lighter);">0 字元（建議20字元內）</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <label style="margin:0;">頁面 &lt;title&gt;</label>
+            <span id="seo-title-count" style="font-size:11px;color:var(--text-lighter);white-space:nowrap;">0 字元（建議20字元內）</span>
           </div>
+          <input type="text" id="f-page-title" placeholder="例：產品名稱 | 副標Slogan" />
         </div>
         <div class="field">
-          <label>Meta description</label>
-          <textarea id="f-meta-desc" placeholder="簡短描述此頁面內容，約 100-160 字元"></textarea>
-          <div style="display:flex;justify-content:flex-end;align-items:center;">
-            <span id="seo-desc-count" style="font-size:11px;color:var(--text-lighter);">0 字元（建議150字元內）</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <label style="margin:0;">Meta description</label>
+            <span id="seo-desc-count" style="font-size:11px;color:var(--text-lighter);white-space:nowrap;">0 字元（建議150字元內）</span>
           </div>
+          <textarea id="f-meta-desc" placeholder="簡短描述此頁面內容，約 100-160 字元"></textarea>
         </div>
 
-        <hr style="border:none;border-top:1px solid var(--border);margin:4px 0;" />
+        <h3 class="seo-section-title" style="margin-top:8px;">追蹤碼與埋點</h3>
 
         <div class="field">
           <label>GA4 Measurement ID</label>
@@ -640,8 +664,8 @@
         </div>
         <div style="font-size:11px;color:var(--text-soft);background:#f0f4fb;border-radius:6px;padding:10px 12px;line-height:1.9;">
           事件埋點 <a href="#" onclick="event.preventDefault();document.getElementById('tracking-guide-modal').style.display='flex';" style="color:var(--primary);font-weight:600;text-decoration:none;border-bottom:1px dashed var(--primary);cursor:pointer;">（位置示意圖）</a>：<br/>
-          🟢 <strong>下載按鈕（4 個）</strong>→ GA4: <code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">click_app_download</code>　Meta: <code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">Lead</code><br/>
-          🔴 <strong>互動按鈕（8 個）</strong>→ GA4: <code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">click_cta</code>　Meta: <code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">ClickCTA</code>
+          🟢 <strong>下載按鈕（4 個）</strong>→ GA4：<code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">click_app_download</code> / Meta：<code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">Lead</code><br/>
+          🔴 <strong>互動按鈕（8 個）</strong>→ GA4：<code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">click_cta</code> / Meta：<code style="background:#e8f0fe;border-radius:3px;padding:1px 4px;">ClickCTA</code>
         </div>
 
         <p style="font-size:12px;color:var(--text-soft);margin:4px 0 0;line-height:1.6;">ℹ️ SEO 與追蹤設定僅寫入網頁 <code style="background:#f0f4fb;border-radius:4px;padding:1px 5px;font-size:11px;">&lt;head&gt;</code>，<strong>不會顯示於頁面上</strong>。</p>
@@ -2137,7 +2161,13 @@ const SHARED_ASSETS = [
   'assets/images/SharedImages/cellphone_downloadCTA.png',
 ];
 
-const DEFAULT_SHOWCASE_FOLDER = 'LandingPage_chipk';
+// 可選的範例展示資料夾（移至 demo/ 底下，可擴充多個範例）
+const SHOWCASE_FOLDERS = {
+  chipk:       { folder: 'demo/LandingPage_chipk',       label: '籌K（chipk）' },
+  supertrendk: { folder: 'demo/LandingPage_supertrendk', label: '起K（supertrendk）' },
+};
+// 記錄當下載入的範例資料夾，供 downloadZIP() 的殘留路徑掃描使用
+let DEFAULT_SHOWCASE_FOLDER = SHOWCASE_FOLDERS.chipk.folder;
 
 /* ============================================================
    Download ZIP
@@ -2147,7 +2177,8 @@ async function downloadZIP(codeName) {
   const safeName = (codeName && codeName.trim())
     ? codeName.trim().replace(/[^\w-]/g, '')
     : productName.replace(/[^\w\u4e00-\u9fff]/g, '');
-  const folderName = `LandingPage_${safeName}`;
+  const folderName = safeName;
+  const outerFolderName = `LandingPage_${safeName}`;
 
   // 匯出前先解決色碼欄位不同步，並同步回 picker+hex，避免回退預設值
   const resolved = getThemeColors();
@@ -2236,9 +2267,9 @@ async function downloadZIP(codeName) {
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${folderName}.zip`;
+  a.download = `${outerFolderName}.zip`;
   a.click();
-  showToast(`✓ 已打包下載 ${folderName}.zip`);
+  showToast(`✓ 已打包下載 ${outerFolderName}.zip`);
 }
 
 /* ============================================================
@@ -2498,16 +2529,40 @@ async function setShowcaseImageAsync(fieldId, src) {
   } catch (e) { /* fetch 失敗時保留路徑字串 */ }
 }
 
-async function loadDefaultShowcase() {
+function toggleShowcaseChooser(event) {
+  if (event) event.stopPropagation();
+  const dd = document.getElementById('showcase-dropdown');
+  const willOpen = !dd.classList.contains('open');
+  dd.classList.toggle('open', willOpen);
+  if (willOpen) {
+    // 點擊其他地方時關閉下拉選單
+    document.addEventListener('click', closeShowcaseChooser, { once: true });
+  }
+}
+function closeShowcaseChooser() {
+  document.getElementById('showcase-dropdown')?.classList.remove('open');
+}
+function chooseShowcase(key) {
+  const entry = SHOWCASE_FOLDERS[key];
+  if (!entry) return;
+  closeShowcaseChooser();
+  loadDefaultShowcase(entry.folder);
+}
+
+async function loadDefaultShowcase(folder) {
+  // 預設仍載入籌K，但允許指定其他範例資料夾
+  const showcaseFolder = folder || SHOWCASE_FOLDERS.chipk.folder;
+  // 記錄當下範例資料夾，供 downloadZIP() 殘留路徑掃描使用
+  DEFAULT_SHOWCASE_FOLDER = showcaseFolder;
   try {
-    const htmlResp = await fetch(`${DEFAULT_SHOWCASE_FOLDER}/index.html`);
+    const htmlResp = await fetch(`${showcaseFolder}/index.html`);
     if (!htmlResp.ok) return;
     const htmlStr = await htmlResp.text();
     const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
 
     const gt = (sel) => doc.querySelector(sel)?.textContent?.trim() || '';
     const ga = (sel, attr) => doc.querySelector(sel)?.getAttribute(attr)?.trim() || '';
-    const rel = (src) => (!src || /^https?:\/\//i.test(src) || /^data:/i.test(src)) ? src : `${DEFAULT_SHOWCASE_FOLDER}/${src.replace(/^\.\//,'')}`;
+    const rel = (src) => (!src || /^https?:\/\//i.test(src) || /^data:/i.test(src)) ? src : `${showcaseFolder}/${src.replace(/^\.\//,'')}`;
 
     // Header / Hero
     document.getElementById('f-product-name').value = gt('.brand-title') || '籌碼K線';
@@ -2586,7 +2641,7 @@ async function loadDefaultShowcase() {
     if (showcaseFbqMatch) document.getElementById('f-pixel-id').value = showcaseFbqMatch[1];
 
     // Colors from showcase styles.css
-    const cssResp = await fetch(`${DEFAULT_SHOWCASE_FOLDER}/styles.css`);
+    const cssResp = await fetch(`${showcaseFolder}/styles.css`);
     if (cssResp.ok) {
       const cssText = await cssResp.text();
       const p = getLastCssVarHex(cssText, 'primary');
@@ -2605,7 +2660,8 @@ async function loadDefaultShowcase() {
     await Promise.all(imagePromises);
     refreshSEOCountOnly();
     previewPage();
-    showToast('✓ 已載入參考範例');
+    const loadedLabel = Object.values(SHOWCASE_FOLDERS).find(e => e.folder === showcaseFolder)?.label;
+    showToast('✓ 已載入' + (loadedLabel ? loadedLabel + '範例' : '參考範例'));
   } catch (e) {
     // 無預設展示資料夾時，維持既有預設
   }
@@ -2759,15 +2815,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- 下載前確認 Modal -->
 <div id="download-confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDownloadModal();">
-  <div style="position:relative;background:#fff;border-radius:14px;max-width:520px;width:90vw;max-height:90vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,0.28);">
+  <div style="position:relative;background:#fff;border-radius:14px;max-width:640px;width:90vw;max-height:90vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,0.28);">
     <button onclick="closeDownloadModal();" style="position:absolute;top:12px;right:12px;z-index:1;width:28px;height:28px;border-radius:50%;border:none;background:#f3f4f6;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;color:#444;">&times;</button>
     <div style="padding:26px 28px;">
-      <h3 style="margin:0 0 18px;font-size:18px;font-weight:700;color:var(--text);">下載前確認</h3>
+      <h3 style="margin:0 0 18px;font-size:18px;font-weight:700;color:var(--text);">下載前注意事項</h3>
       <div class="field">
         <label style="font-size:13px;">幫網頁命名</label>
         <input type="text" id="f-download-codename" placeholder="參考App英文名輸入頁面英文代稱，例如：chipk" oninput="onDownloadCodenameInput()" style="font-size:14px;" />
       </div>
-      <p style="font-size:14px;color:var(--text-soft);line-height:1.7;margin:10px 0 0;background:#f0f4fb;border-radius:8px;padding:10px 12px;word-break:break-all;">本次上架網址將為：<br/>https://stockhub.cmoney.tw/LandingPage_<span id="dl-codename-url" style="font-weight:700;color:var(--primary);">[頁面英文代稱]</span>/index.html</p>
+      <p style="font-size:14px;color:var(--text-soft);line-height:1.7;margin:10px 0 0;background:#f0f4fb;border-radius:8px;padding:10px 12px;word-break:break-all;">本次上架網址預計為：<br/>https://stockhub.cmoney.tw/LandingPage/<span id="dl-codename-url" style="font-weight:700;color:var(--primary);">[頁面英文代稱]</span>/index.html</p>
       <p style="font-weight:600;margin:18px 0 8px;font-size:15px;color:var(--text);">請確認以下事項：</p>
       <label style="display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
         <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
@@ -2777,7 +2833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
         <span>已確認輸入的頁面英文代稱正確，且未跟其他已上架網頁重複</span>
       </label>
-      <p style="font-size:13px;color:var(--text-soft);line-height:1.7;margin:6px 0 0;background:#fff8e6;border-radius:8px;padding:10px 12px;">※ 下載後請先解壓縮，並提供名稱為 <strong>LandingPage_<span id="dl-codename-note">[頁面英文代稱]</span></strong> 的<strong>內層資料夾</strong>請PM Jimmy協助上架。</p>
+      <p style="font-size:13px;color:var(--text-soft);line-height:1.7;margin:6px 0 0;background:#fff8e6;border-radius:8px;padding:10px 12px;">※ 下載後請先解壓縮，並提供名稱為 <strong><span id="dl-codename-note">[頁面英文代稱]</span></strong>的<strong>內層資料夾</strong> 請 PM Jimmy 協助上架，實際網址請於上架後再次確認。</p>
       <button id="download-confirm-btn" class="btn btn--accent" disabled onclick="confirmDownload()" style="width:100%;margin-top:20px;font-size:14px;opacity:0.5;cursor:not-allowed;">確認完成，下載檔案</button>
     </div>
   </div>
