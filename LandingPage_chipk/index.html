@@ -9,6 +9,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DCRTWTHXTP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DCRTWTHXTP');
+    </script>
+    <!-- Meta Pixel -->
+    <script>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1327697457820026');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1327697457820026&ev=PageView&noscript=1"/></noscript>
   </head>
   <body>
     <!-- ========== Header ========== -->
@@ -22,8 +42,8 @@
           </div>
         </a>
         <div class="header-ctas">
-          <a href="#features" class="header-nav-btn header-nav-btn--ghost">特色功能</a>
-          <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">免費下載</button>
+          <a href="#features" class="header-nav-btn header-nav-btn--ghost" data-track="cta">特色功能</a>
+          <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary" data-track="download">免費下載</button>
         </div>
       </div>
     </header>
@@ -39,8 +59,8 @@
                 <p class="hero-intro">全台最完整的股市籌碼監測工具！<br>
 每日盤後揭露三大法人、主力券商、大戶散戶的真實動向，帶你提前掌握布局脈絡，降低資訊落差與高檔追價風險。</p>
                 <div class="hero-ctas">
-                  <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary">立即免費下載</button>
-                  <a href="#features" class="header-nav-btn header-nav-btn--ghost">看功能介紹</a>
+                  <button onclick="handleDownload()" class="header-nav-btn header-nav-btn--primary" data-track="download">立即免費下載</button>
+                  <a href="#features" class="header-nav-btn header-nav-btn--ghost" data-track="cta">看功能介紹</a>
                 </div>
               </div>
             </div>
@@ -62,10 +82,10 @@
             
             <div class="highlights-point">
               <div class="highlights-point__body">
-                <h3><span class="highlights-point__icon">🔍</span>籌碼不說謊，數據替你選股</h3>
+                <h3><span class="highlights-point__icon">🔍</span>籌碼不說謊，「數據選股」勝過感覺與消息</h3>
                 <div class="highlights-perf">
                   <div class="highlights-perf__main">
-                    <span class="highlights-stat__num">盤面指標 勝過感覺與消息</span>
+                    <span class="highlights-stat__num">籌碼集中個股 贏過大盤勝率達 70%</span>
                   </div>
                 </div>
                 <p class="highlights-point__desc">20+ 種籌碼指標每日更新，三大法人、主力券商進出一覽無遺，讓你的每一筆交易都有所依據</p>
@@ -265,8 +285,8 @@
               <h2>立即下載 掌握籌碼先機</h2>
               <p class="download-subheading">每日揭露主力真實動向，跟著法人資金共識一起佈局</p>
               <div class="download-badges">
-                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link"><img src="assets/images/SharedImages/appstore-badge.png" alt="下載 iOS" class="store-badge-large" /></a>
-                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link"><img src="assets/images/SharedImages/play-badge.png" alt="下載 Android" class="store-badge-large" /></a>
+                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link" data-track="download"><img src="assets/images/SharedImages/appstore-badge.png" alt="下載 iOS" class="store-badge-large" /></a>
+                <a href="https://www.cmoney.tw/r/2/ctiefz" target="_blank" rel="noreferrer" class="store-link" data-track="download"><img src="assets/images/SharedImages/play-badge.png" alt="下載 Android" class="store-badge-large" /></a>
               </div>
             </div>
             <div class="download-qr"><img src="assets/images/qrcode.png" alt="掃描 QR Code 下載" class="download-qr__img" /></div>
@@ -424,6 +444,20 @@
         };
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape') window.closeQrModal && window.closeQrModal();
+        });
+
+        // ── 事件追蹤（GA4 + Meta Pixel）──
+        document.addEventListener('click', function(e) {
+          var el = e.target.closest('[data-track]');
+          if (!el) return;
+          var action = el.getAttribute('data-track');
+          if (action === 'download') {
+            if (typeof gtag === 'function') gtag('event', 'click_app_download');
+            if (typeof fbq === 'function') fbq('track', 'Lead');
+          } else if (action === 'cta') {
+            if (typeof gtag === 'function') gtag('event', 'click_cta');
+            if (typeof fbq === 'function') fbq('trackCustom', 'ClickCTA');
+          }
         });
       })();
     </script>
