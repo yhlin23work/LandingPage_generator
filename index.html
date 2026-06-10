@@ -507,7 +507,7 @@
             <textarea id="f-cta-sub" placeholder="簡要補充描述，也可留白不放"></textarea>
           </div>
           <div class="field">
-            <label>下載連結 (URL)</label>
+            <label>下載連結 (URL)<a href="https://cmsv.cmoney.tw/one-link/list?menu=menu-tab-0" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:600;text-decoration:none;border-bottom:1px dashed var(--primary);margin-left:4px;">（前往後台設定onelink）</a></label>
             <input type="url" id="f-cta-url" placeholder="貼上公司後台71.onelink產出的連結" value="" />
           </div>
           <div class="field">
@@ -2764,25 +2764,21 @@ document.addEventListener('DOMContentLoaded', () => {
     <div style="padding:26px 28px;">
       <h3 style="margin:0 0 18px;font-size:18px;font-weight:700;color:var(--text);">下載前確認</h3>
       <div class="field">
-        <label>幫網頁命名</label>
-        <input type="text" id="f-download-codename" placeholder="參考App英文名輸入頁面英文代稱，例如：chipk" oninput="onDownloadCodenameInput()" />
+        <label style="font-size:13px;">幫網頁命名</label>
+        <input type="text" id="f-download-codename" placeholder="參考App英文名輸入頁面英文代稱，例如：chipk" oninput="onDownloadCodenameInput()" style="font-size:14px;" />
       </div>
-      <p style="font-size:13px;color:var(--text-soft);line-height:1.7;margin:10px 0 0;background:#f0f4fb;border-radius:8px;padding:10px 12px;word-break:break-all;">本次上架網址將為：<br/>https://stockhub.cmoney.tw/LandingPage_<span id="dl-codename-url" style="font-weight:700;color:var(--primary);">[頁面英文代稱]</span>/index.html</p>
-      <p style="font-weight:600;margin:18px 0 8px;font-size:14px;color:var(--text);">請確認以下事項：</p>
-      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
+      <p style="font-size:14px;color:var(--text-soft);line-height:1.7;margin:10px 0 0;background:#f0f4fb;border-radius:8px;padding:10px 12px;word-break:break-all;">本次上架網址將為：<br/>https://stockhub.cmoney.tw/LandingPage_<span id="dl-codename-url" style="font-weight:700;color:var(--primary);">[頁面英文代稱]</span>/index.html</p>
+      <p style="font-weight:600;margin:18px 0 8px;font-size:15px;color:var(--text);">請確認以下事項：</p>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
         <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
-        <span>已透過預覽畫面確認網頁內容、顏色、SEO與追蹤設定皆正確。</span>
+        <span>已透過預覽畫面確認網頁內容、顏色、SEO與追蹤設定皆正確</span>
       </label>
-      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
         <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
-        <span>已確認輸入的頁面英文代稱正確，且未跟其他已上架網頁重複。</span>
+        <span>已確認輸入的頁面英文代稱正確，且未跟其他已上架網頁重複</span>
       </label>
-      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
-        <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
-        <span>已了解下載檔案為壓縮檔。</span>
-      </label>
-      <p style="font-size:12px;color:var(--text-soft);line-height:1.7;margin:6px 0 0;background:#fff8e6;border-radius:8px;padding:10px 12px;">※下載後請先解壓縮，並提供名稱為 LandingPage_<span id="dl-codename-note" style="font-weight:700;">[頁面英文代稱]</span> 的內層資料夾請PM_Jimmy協助上架。</p>
-      <button id="download-confirm-btn" class="btn btn--accent" disabled onclick="confirmDownload()" style="width:100%;margin-top:20px;opacity:0.5;cursor:not-allowed;">確認完成，下載檔案</button>
+      <p style="font-size:13px;color:var(--text-soft);line-height:1.7;margin:6px 0 0;background:#fff8e6;border-radius:8px;padding:10px 12px;">※ 下載後請先解壓縮，並提供名稱為 <strong>LandingPage_<span id="dl-codename-note">[頁面英文代稱]</span></strong> 的<strong>內層資料夾</strong>請PM Jimmy協助上架。</p>
+      <button id="download-confirm-btn" class="btn btn--accent" disabled onclick="confirmDownload()" style="width:100%;margin-top:20px;font-size:14px;opacity:0.5;cursor:not-allowed;">確認完成，下載檔案</button>
     </div>
   </div>
 </div>
