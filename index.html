@@ -657,8 +657,8 @@
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,8 3,14"/></svg>
         預覽頁面
       </button>
-      <button class="btn btn--accent" onclick="downloadZIP()">
-        ⬇ 下載打包
+      <button class="btn btn--accent" onclick="openDownloadModal()">
+        ⬇ 打包下載
       </button>
     </div>
   </div><!-- /form-panel -->
@@ -2142,9 +2142,11 @@ const DEFAULT_SHOWCASE_FOLDER = 'LandingPage_chipk';
 /* ============================================================
    Download ZIP
    ============================================================ */
-async function downloadZIP() {
+async function downloadZIP(codeName) {
   const productName = v('f-product-name') || 'product';
-  const safeName = productName.replace(/[^\w\u4e00-\u9fff]/g, '');
+  const safeName = (codeName && codeName.trim())
+    ? codeName.trim().replace(/[^\w-]/g, '')
+    : productName.replace(/[^\w\u4e00-\u9fff]/g, '');
   const folderName = `LandingPage_${safeName}`;
 
   // 匯出前先解決色碼欄位不同步，並同步回 picker+hex，避免回退預設值
@@ -2610,6 +2612,50 @@ async function loadDefaultShowcase() {
 }
 
 /* ============================================================
+   Download confirm modal
+   ============================================================ */
+function getDownloadCodename() {
+  return v('f-download-codename').replace(/[^\w-]/g, '');
+}
+function onDownloadCodenameInput() {
+  const code = getDownloadCodename();
+  const display = code || '[頁面英文代稱]';
+  const urlEl = document.getElementById('dl-codename-url');
+  const noteEl = document.getElementById('dl-codename-note');
+  if (urlEl) urlEl.textContent = display;
+  if (noteEl) noteEl.textContent = display;
+  updateDownloadBtnState();
+}
+function updateDownloadBtnState() {
+  const code = getDownloadCodename();
+  const allChecked = [...document.querySelectorAll('.dl-confirm-check')].every(c => c.checked);
+  const ok = code.length > 0 && allChecked;
+  const btn = document.getElementById('download-confirm-btn');
+  if (!btn) return;
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '0.5';
+  btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+}
+function openDownloadModal() {
+  const codeEl = document.getElementById('f-download-codename');
+  if (codeEl) codeEl.value = '';
+  document.querySelectorAll('.dl-confirm-check').forEach(c => { c.checked = false; });
+  onDownloadCodenameInput();
+  document.getElementById('download-confirm-modal').style.display = 'flex';
+  setTimeout(() => { if (codeEl) codeEl.focus(); }, 50);
+}
+function closeDownloadModal() {
+  document.getElementById('download-confirm-modal').style.display = 'none';
+}
+async function confirmDownload() {
+  const code = getDownloadCodename();
+  const allChecked = [...document.querySelectorAll('.dl-confirm-check')].every(c => c.checked);
+  if (!code || !allChecked) return;
+  closeDownloadModal();
+  await downloadZIP(code);
+}
+
+/* ============================================================
    Toast
    ============================================================ */
 function showToast(msg) {
@@ -2710,6 +2756,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // 不自動載入展示，保持空白初始狀態
 });
 </script>
+
+<!-- 下載前確認 Modal -->
+<div id="download-confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDownloadModal();">
+  <div style="position:relative;background:#fff;border-radius:14px;max-width:520px;width:90vw;max-height:90vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,0.28);">
+    <button onclick="closeDownloadModal();" style="position:absolute;top:12px;right:12px;z-index:1;width:28px;height:28px;border-radius:50%;border:none;background:#f3f4f6;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;color:#444;">&times;</button>
+    <div style="padding:26px 28px;">
+      <h3 style="margin:0 0 18px;font-size:18px;font-weight:700;color:var(--text);">下載前確認</h3>
+      <div class="field">
+        <label>幫網頁命名</label>
+        <input type="text" id="f-download-codename" placeholder="參考App英文名輸入頁面英文代稱，例如：chipk" oninput="onDownloadCodenameInput()" />
+      </div>
+      <p style="font-size:13px;color:var(--text-soft);line-height:1.7;margin:10px 0 0;background:#f0f4fb;border-radius:8px;padding:10px 12px;word-break:break-all;">本次上架網址將為：<br/>https://stockhub.cmoney.tw/LandingPage_<span id="dl-codename-url" style="font-weight:700;color:var(--primary);">[頁面英文代稱]</span>/index.html</p>
+      <p style="font-weight:600;margin:18px 0 8px;font-size:14px;color:var(--text);">請確認以下事項：</p>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
+        <span>已透過預覽畫面確認網頁內容、顏色、SEO與追蹤設定皆正確。</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
+        <span>已確認輸入的頁面英文代稱正確，且未跟其他已上架網頁重複。</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" class="dl-confirm-check" onchange="updateDownloadBtnState()" style="margin-top:3px;flex-shrink:0;" />
+        <span>已了解下載檔案為壓縮檔。</span>
+      </label>
+      <p style="font-size:12px;color:var(--text-soft);line-height:1.7;margin:6px 0 0;background:#fff8e6;border-radius:8px;padding:10px 12px;">※下載後請先解壓縮，並提供名稱為 LandingPage_<span id="dl-codename-note" style="font-weight:700;">[頁面英文代稱]</span> 的內層資料夾請PM_Jimmy協助上架。</p>
+      <button id="download-confirm-btn" class="btn btn--accent" disabled onclick="confirmDownload()" style="width:100%;margin-top:20px;opacity:0.5;cursor:not-allowed;">確認完成，下載檔案</button>
+    </div>
+  </div>
+</div>
 
 <!-- 位置示意圖 Modal -->
 <div id="tracking-guide-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none';">
