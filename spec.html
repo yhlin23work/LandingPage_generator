@@ -46,8 +46,8 @@
 <body>
 
 <div class="header">
-  <h1>🛠 Landing Page 產生器 <span class="badge">網頁規格書 v1.0</span></h1>
-  <p>文件日期：2026-06-05 ／ 專案：CMoney Landing Page Generator</p>
+  <h1>🛠 Landing Page 產生器 <span class="badge">網頁規格書 v2.0</span></h1>
+  <p>文件日期：2026-06-10 ／ 專案：CMoney Landing Page Generator</p>
 </div>
 
 <div class="container">
@@ -55,12 +55,13 @@
   <!-- 1. 產品概述 -->
   <h2>1. 產品概述</h2>
   <section>
-    <p>Landing Page 產生器是一個單頁工具（<code>index.html</code>），左側為表單設定區，右側為即時預覽區。使用者填寫產品資訊後，可預覽完整 Landing Page，並一鍵下載包含 HTML、CSS 與圖片素材的完整打包檔案。</p>
+    <p>Landing Page 產生器是一個單頁工具（<code>index.html</code>），左側為表單設定區（分頁式），右側為即時預覽區。使用者填寫產品資訊、上傳圖片後，可預覽完整 Landing Page，並一鍵下載包含 HTML、CSS 與圖片素材的完整打包檔案。亦支援匯入既有打包檔重新編輯，以及一鍵載入內建範例。</p>
     <table>
       <tr><th>項目</th><th>說明</th></tr>
       <tr><td>框架</td><td>純 HTML / CSS / JavaScript（無框架依賴）</td></tr>
-      <tr><td>外部依賴</td><td>Google Fonts（Noto Sans TC / Noto Serif TC）、JSZip 3.10.1（CDN）</td></tr>
-      <tr><td>佈局</td><td>雙欄 Grid：左欄 480px（工具面板）＋ 右欄 1fr（預覽區）</td></tr>
+      <tr><td>外部依賴</td><td>Google Fonts（Noto Sans TC / Noto Serif TC）、JSZip 3.10.1、qrcode-generator 1.4.4（皆 CDN）</td></tr>
+      <tr><td>佈局</td><td>雙欄 Grid：左欄 480px（<code>--panel-width</code>，工具面板）＋ 右欄 1fr（預覽區）</td></tr>
+      <tr><td>面板收合</td><td>可收起工具面板，僅留窄欄（<code>--panel-collapsed-width</code>），方便檢視桌機版完整畫面</td></tr>
       <tr><td>RWD 臨界點</td><td>≤ 959px：隱藏預覽區，僅顯示工具面板</td></tr>
     </table>
   </section>
@@ -70,52 +71,106 @@
   <section>
     <table>
       <tr><th>區塊</th><th>內容</th><th>說明</th></tr>
-      <tr><td>左欄（480px）</td><td>🛠 Landing Page 產生器</td><td>深藍底 <code>#2e5283</code>，白字，固定置頂</td></tr>
-      <tr><td>右欄（1fr）</td><td>「預覽畫面」文字 ＋ 桌機／手機切換按鈕</td><td>深灰底 <code>#2d3240</code>，與預覽面板對齊</td></tr>
+      <tr><td>左欄（480px）</td><td>🛠 Landing Page 產生器 ＋ <strong>匯入</strong>／<strong>範例</strong>／<strong>收合</strong> 按鈕</td><td>深藍底 <code>#2e5283</code>，白字，固定置頂</td></tr>
+      <tr><td>右欄（1fr）</td><td>「預覽畫面」文字 ＋ 桌機／手機切換按鈕</td><td>深灰底，與預覽面板對齊</td></tr>
     </table>
+
+    <h3>左欄工具按鈕</h3>
+    <table>
+      <tr><th>按鈕</th><th>行為</th></tr>
+      <tr><td>匯入</td><td>選擇先前打包的 <code>.zip</code>，呼叫 <code>importZIP()</code> 解析並回填所有表單欄位與圖片，可繼續編輯</td></tr>
+      <tr><td>範例</td><td>點擊於按鈕下方展開下拉選單，可選 <strong>籌K（chipk）</strong> 或 <strong>起K（supertrendk）</strong>，載入對應 <code>demo/</code> 範例設定值；點選後關閉，點頁面其他處亦自動關閉</td></tr>
+      <tr><td>收合 ‹</td><td><code>toggleFormPanel()</code> 收起／展開工具面板</td></tr>
+    </table>
+
     <h3>裝置切換按鈕</h3>
     <table>
       <tr><th>按鈕</th><th>行為</th></tr>
       <tr><td><span class="tag tag-desktop">桌機</span></td><td>iframe 改為 <code>mode-desktop</code>，寬度 100%；同時透過 <code>postMessage</code> 通知 iframe 切換為 desktop 模式</td></tr>
-      <tr><td><span class="tag tag-mobile">手機</span></td><td>iframe 改為 <code>mode-mobile</code>，寬度固定 375px 置中，左右 padding 16px；同時透過 <code>postMessage</code> 通知 iframe 切換為 mobile 模式</td></tr>
+      <tr><td><span class="tag tag-mobile">手機</span></td><td>iframe 改為 <code>mode-mobile</code>，寬度固定 375px 置中；同時透過 <code>postMessage</code> 通知 iframe 切換為 mobile 模式</td></tr>
     </table>
   </section>
 
-  <!-- 3. 工具面板 -->
+  <!-- 3. 工具面板分頁 -->
   <h2>3. 工具面板（左欄）</h2>
   <section>
-    <p>共分六個可折疊區塊（Accordion），每區塊含數個欄位。底部 sticky action bar 提供「預覽頁面」與「下載打包」按鈕。</p>
+    <p>工具面板採三分頁（Tab）切換，底部 sticky action bar 提供「🗑 清空設定」、「▷ 預覽頁面」、「⬇ 打包下載」三顆按鈕。</p>
+    <table>
+      <tr><th>分頁</th><th>內容</th></tr>
+      <tr><td>內容</td><td>六個可折疊區塊（Accordion），填寫頁面主要文案與圖片</td></tr>
+      <tr><td>顏色</td><td>主色 / 輔色設定</td></tr>
+      <tr><td>SEO與追蹤</td><td>SEO 中繼資料 ＋ 追蹤碼與事件埋點</td></tr>
+    </table>
+
+    <h3>3.1 內容分頁（Accordion 區塊）</h3>
     <table>
       <tr><th>#</th><th>區塊名稱</th><th>主要欄位</th></tr>
-      <tr><td>1</td><td>基本設定</td><td>產品名稱、品牌副標題、App Icon URL、頁面 &lt;title&gt;（SEO）、Meta description（SEO）</td></tr>
-      <tr><td>2</td><td>Hero 主視覺</td><td>Hero 主標題、Hero 介紹文字、主要下載連結（CTA URL）、Hero 圖片 URL</td></tr>
-      <tr><td>3</td><td>Why 亮點區塊</td><td>區塊標題、最多 6 個亮點（Icon / 標題 / 說明）</td></tr>
-      <tr><td>4</td><td>特色功能</td><td>區塊標題、最多 6 個功能卡片（標題 / 說明 / 截圖 URL）</td></tr>
-      <tr><td>5</td><td>下載 CTA</td><td>Eyebrow 標籤、H2 標題、副標題、iOS 徽章 URL、Android 徽章 URL、QR Code URL</td></tr>
-      <tr><td>6</td><td>頁尾資訊</td><td>公司名稱、聯絡地址、版權年份</td></tr>
+      <tr><td>1</td><td>Header</td><td>產品名稱、副標文字、App Icon 圖片（上傳）</td></tr>
+      <tr><td>2</td><td>Hero 主視覺</td><td>Hero 主標題、Hero 介紹文字、Hero 圖片（上傳）</td></tr>
+      <tr><td>3</td><td>Why 選擇我們（1-2 個亮點）</td><td>標題、亮點清單（Icon / 標題 / 數據 / 說明，可新增）</td></tr>
+      <tr><td>4</td><td>核心功能（1-6 個功能）</td><td>區塊標題、功能卡片（標題 / 說明 / 截圖上傳，可新增）</td></tr>
+      <tr><td>5</td><td>下載 CTA</td><td>小標、主標題、副標文字、下載連結（onelink）、App Store／Google Play 徽章、QR Code</td></tr>
+      <tr><td>6</td><td>Footer</td><td>公司名稱、聯絡地址、版權年份</td></tr>
+    </table>
+    <div class="note">ℹ️ 多數標題類欄位留空時會自動帶入合理預設（如 Hero 主標題帶入產品名稱、Why 標題帶入「Why [產品名稱]?」、CTA 主標帶入「立即下載[產品名稱] 掌握先機」）。</div>
+
+    <h3>3.2 顏色分頁</h3>
+    <table>
+      <tr><th>欄位</th><th>說明</th></tr>
+      <tr><td>主色 (Primary)</td><td>取色器 ＋ Hex 輸入框雙向同步，套用於 Header、標題、按鈕</td></tr>
+      <tr><td>輔色 (Secondary)</td><td>取色器 ＋ Hex 輸入框雙向同步，套用於下載按鈕、CTA 強調元素</td></tr>
+      <tr><td>背景色</td><td>無須手動設定，依主題自動搭配淺色背景</td></tr>
     </table>
   </section>
 
-  <!-- 3b. SEO 設定 -->
-  <h2>3b. SEO 設定欄位</h2>
+  <!-- 3b. SEO 與追蹤 -->
+  <h2>3b. SEO與追蹤分頁</h2>
   <section>
-    <p>以下欄位寫入產生頁面的 <code>&lt;head&gt;</code>，不顯示於畫面上，用途為搜尋引擎優化（SEO）。</p>
+    <p>此分頁分為「SEO」與「追蹤碼與埋點」兩個區塊，所有設定皆寫入產生頁面的 <code>&lt;head&gt;</code>，不顯示於畫面上。</p>
+
+    <h3>SEO 區塊</h3>
     <table>
-      <tr><th>欄位</th><th>對應 HTML</th><th>顯示位置</th><th>預設值</th></tr>
+      <tr><th>欄位</th><th>對應 HTML</th><th>顯示位置</th><th>備註</th></tr>
       <tr>
         <td>頁面 <code>&lt;title&gt;</code></td>
         <td><code>&lt;title&gt;...&lt;/title&gt;</code></td>
         <td>瀏覽器分頁標題列、Google 搜尋結果藍色標題</td>
-        <td>留空時自動使用「產品名稱｜品牌副標題」</td>
+        <td>即時字元計數（建議 20 字元內）；留空自動使用「產品名稱｜副標」</td>
       </tr>
       <tr>
         <td>Meta description</td>
         <td><code>&lt;meta name="description" content="..."&gt;</code></td>
-        <td>Google 搜尋結果摘要文字（建議 100–160 字元）</td>
-        <td>留空時自動使用 Hero 介紹文字</td>
+        <td>Google 搜尋結果摘要文字</td>
+        <td>即時字元計數（建議 150 字元內）；留空自動使用 Hero 介紹文字</td>
       </tr>
     </table>
-    <div class="note">⚠️ 這兩個欄位在頁面畫面上完全看不到，但對 Google 搜尋排名與點擊率有直接影響，建議填寫。</div>
+
+    <h3>追蹤碼與埋點區塊</h3>
+    <table>
+      <tr><th>欄位</th><th>說明</th></tr>
+      <tr><td>GA4 Measurement ID</td><td>例 <code>G-XXXXXXXXXX</code>，填入後自動注入 <code>gtag.js</code>，並在按鈕點擊時觸發事件</td></tr>
+      <tr><td>Meta Pixel ID</td><td>例 16 位數字，填入後自動注入 <code>fbevents.js</code>（含 <code>PageView</code>），並在按鈕點擊時觸發事件</td></tr>
+    </table>
+
+    <h3>事件埋點對照</h3>
+    <table>
+      <tr><th>觸發元素</th><th>GA4 事件</th><th>Meta 事件</th></tr>
+      <tr><td>🟢 下載按鈕（4 個）</td><td><code>click_app_download</code></td><td><code>Lead</code></td></tr>
+      <tr><td>🔴 互動按鈕（8 個）</td><td><code>click_cta</code></td><td><code>ClickCTA</code></td></tr>
+    </table>
+    <div class="note">⚠️ SEO 與追蹤設定僅寫入 <code>&lt;head&gt;</code>，畫面上看不到，但對搜尋排名、點擊率與成效追蹤有直接影響，建議填寫。</div>
+  </section>
+
+  <!-- 3c. 圖片上傳機制 -->
+  <h2>3c. 圖片上傳與素材機制</h2>
+  <section>
+    <p>所有圖片欄位（App Icon、Hero、功能截圖、徽章、QR Code）皆改為<strong>本機檔案上傳</strong>，不再使用 URL 輸入。上傳後以 data URL 暫存於表單，預覽時即時顯示；打包時自動轉換為 <code>assets/images/...</code> 相對路徑並納入 ZIP。</p>
+    <table>
+      <tr><th>機制</th><th>說明</th></tr>
+      <tr><td>一般上傳</td><td>點擊上傳區選檔（PNG / JPG / WebP），可單獨清除</td></tr>
+      <tr><td>共用徽章</td><td>App Store / Google Play 徽章預設使用內建圖（<code>SharedImages/</code>），可「自訂上傳」覆蓋或「還原」回預設</td></tr>
+      <tr><td>QR Code 自動產生</td><td><code>autoGenerateQR()</code>：依「App Icon ＋ 下載連結」用 qrcode-generator 產生 QR 圖；亦可自訂上傳。桌機版顯示、手機版自動隱藏</td></tr>
+    </table>
   </section>
 
   <!-- 4. 預覽面板 -->
@@ -198,28 +253,52 @@
   <!-- 6. 下載打包規格 -->
   <h2>6. 下載打包規格</h2>
   <section>
+    <h3>下載前確認彈窗</h3>
+    <p>點「⬇ 打包下載」先開啟確認彈窗（<code>openDownloadModal()</code>），需完成以下項目，按鈕才會啟用：</p>
+    <ul>
+      <li><strong>幫網頁命名</strong>：輸入頁面英文代稱（僅保留 <code>\w-</code>），即時預覽上架網址 <code>https://stockhub.cmoney.tw/LandingPage/[代稱]/index.html</code></li>
+      <li>勾選「已透過預覽畫面確認網頁內容、顏色、SEO與追蹤設定皆正確」</li>
+      <li>勾選「已確認輸入的頁面英文代稱正確，且未跟其他已上架網頁重複」</li>
+    </ul>
+    <div class="note">※ 提醒文案：下載後先解壓縮，提供名稱為 <strong>[頁面英文代稱]</strong> 的<strong>內層資料夾</strong>請 PM Jimmy 協助上架；實際網址與 landing page 內容請於上架後再次確認。</div>
+
     <h3>ZIP 結構</h3>
     <table>
       <tr><th>路徑</th><th>說明</th></tr>
-      <tr><td><code>LandingPage_[產品名稱].zip</code></td><td>ZIP 根目錄（產品名稱中非字元符號自動移除）</td></tr>
-      <tr><td><code>LandingPage_[產品名稱]/index.html</code></td><td>Landing Page 主檔，CSS 改為外部引用 <code>&lt;link rel="stylesheet" href="styles.css" /&gt;</code></td></tr>
-      <tr><td><code>LandingPage_[產品名稱]/styles.css</code></td><td>完整樣式表（從 EMBEDDED_CSS 提取）</td></tr>
-      <tr><td><code>LandingPage_[產品名稱]/assets/images/*</code></td><td>所有表單中填入的本地圖片（路徑以 <code>assets/</code> 開頭）</td></tr>
+      <tr><td><code>LandingPage_[代稱].zip</code></td><td>下載檔名（非 <code>\w-</code> 字元自動移除）</td></tr>
+      <tr><td><code>[代稱]/index.html</code></td><td>內層資料夾主檔，CSS 改為外部引用 <code>&lt;link rel="stylesheet" href="styles.css" /&gt;</code></td></tr>
+      <tr><td><code>[代稱]/styles.css</code></td><td>完整樣式表，並於匯出時寫入最終主題色（避免配色回退預設）</td></tr>
+      <tr><td><code>[代稱]/assets/images/*</code></td><td>上傳圖片（轉相對路徑）＋ 共用素材（<code>SHARED_ASSETS</code>：徽章等）</td></tr>
     </table>
-    <div class="note">⚠️ 外部 URL 圖片（https://...）不納入打包，保留原始 URL 引用。如本地資源不存在（fetch 失敗），該圖片靜默跳過不影響下載。</div>
+    <div class="note">⚠️ 外部 URL 圖片（https://...）保留原始 URL 引用不納入打包。本地資源 fetch 失敗時靜默跳過，不影響下載。</div>
 
     <h3>打包流程</h3>
     <div class="flow-box">
       <div class="flow-step">1. 呼叫 <code>generateHTML()</code></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">2. 移除 <code>&lt;style&gt;</code> 區塊<br>改插入 <code>&lt;link href="styles.css"&gt;</code></div>
+      <div class="flow-step">2. 抽出 <code>&lt;style&gt;</code> 為 styles.css<br>並寫入最終主題色</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">3. 掃描表單所有 input[type=url]<br>收集 <code>assets/</code> 開頭路徑</div>
+      <div class="flow-step">3. 上傳圖片 data URL<br>→ <code>assets/</code> 相對路徑</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">4. fetch 各圖片並加入 ZIP</div>
+      <div class="flow-step">4. fetch 共用素材與殘留 showcase 路徑加入 ZIP</div>
       <div class="flow-arrow">→</div>
       <div class="flow-step">5. JSZip 產生 Blob<br>觸發下載</div>
     </div>
+  </section>
+
+  <!-- 6b. 匯入與範例 -->
+  <h2>6b. 匯入與範例載入</h2>
+  <section>
+    <h3>匯入 ZIP（<code>importZIP()</code>）</h3>
+    <p>選擇先前打包的 <code>.zip</code>，解析其中的 <code>index.html</code> 與 <code>styles.css</code>，將文案、顏色、SEO／追蹤碼、圖片等回填至表單，可繼續編輯後重新打包。</p>
+    <h3>內建範例（<code>loadDefaultShowcase()</code>）</h3>
+    <p>範例資料夾置於 <code>demo/</code> 底下，以 <code>SHOWCASE_FOLDERS</code> 設定表管理：</p>
+    <table>
+      <tr><th>選項</th><th>資料夾</th></tr>
+      <tr><td>籌K（chipk）</td><td><code>demo/LandingPage_chipk</code></td></tr>
+      <tr><td>起K（supertrendk）</td><td><code>demo/LandingPage_supertrendk</code></td></tr>
+    </table>
+    <p>選擇後 fetch 該資料夾的 <code>index.html</code> / <code>styles.css</code>，解析回填所有欄位與圖片（圖片以 <code>setShowcaseImageAsync()</code> 非同步抓回存入上傳暫存，確保打包正確）。</p>
   </section>
 
   <!-- 7. Landing Page 頁面結構 -->
@@ -229,8 +308,8 @@
       <tr><th>#</th><th>區塊</th><th>ID / Class</th><th>說明</th></tr>
       <tr><td>1</td><td>Header</td><td><code>.site-header</code></td><td>固定置頂，含品牌 Logo、「特色功能」、「免費下載」按鈕</td></tr>
       <tr><td>2</td><td>Hero</td><td><code>.hero</code></td><td>主標題、介紹文字、「立即免費下載」＋「看功能介紹」CTA、主題圖</td></tr>
-      <tr><td>3</td><td>Why 亮點</td><td><code>.highlights</code></td><td>最多 6 個亮點卡片</td></tr>
-      <tr><td>4</td><td>特色功能</td><td><code>#features</code> / <code>.features</code></td><td>桌機版：左列點選 + 右側圖片預覽；手機版：Swipe Slider</td></tr>
+      <tr><td>3</td><td>Why 選擇我們</td><td><code>.highlights</code></td><td>亮點卡片（含 Icon / 數據 / 說明）</td></tr>
+      <tr><td>4</td><td>核心功能</td><td><code>#features</code> / <code>.features</code></td><td>桌機版：左列點選 + 右側圖片預覽；手機版：Swipe Slider</td></tr>
       <tr><td>5</td><td>下載 CTA</td><td><code>#download</code> / <code>.download-cta</code></td><td>iOS / Android 徽章連結、QR Code（手機版隱藏 QR Code）</td></tr>
       <tr><td>6</td><td>Footer</td><td><code>.site-footer</code></td><td>品牌、公司資訊、版權聲明</td></tr>
     </table>
@@ -252,7 +331,7 @@
 </div>
 
 <div class="footer">
-  Landing Page 產生器 網頁規格書 v1.0 ／ CMoney ／ 2026-06-05
+  Landing Page 產生器 網頁規格書 v2.0 ／ CMoney ／ 2026-06-10
 </div>
 
 </body>
